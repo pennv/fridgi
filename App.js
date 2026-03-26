@@ -3,15 +3,12 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import {
-  DMSans_400Regular,
-  DMSans_500Medium,
-  DMSans_700Bold,
-} from '@expo-google-fonts/dm-sans';
-import {
-  Fraunces_400Regular,
-  Fraunces_600SemiBold,
-  Fraunces_700Bold,
-} from '@expo-google-fonts/fraunces';
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 
 import { COLORS } from './src/theme';
 import {
@@ -26,12 +23,11 @@ import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    DMSans_400Regular,
-    DMSans_500Medium,
-    DMSans_700Bold,
-    Fraunces_400Regular,
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
   });
 
   const [onboarded, setOnboarded] = useState(false);

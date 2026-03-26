@@ -29,12 +29,12 @@ export const COLORS = {
 };
 
 export const FONTS = {
-  display: 'Fraunces_700Bold',
-  displayMed: 'Fraunces_600SemiBold',
-  displayReg: 'Fraunces_400Regular',
-  body: 'DMSans_400Regular',
-  bodyMed: 'DMSans_500Medium',
-  bodyBold: 'DMSans_700Bold',
+  display: 'PlusJakartaSans_800ExtraBold',
+  displayMed: 'PlusJakartaSans_700Bold',
+  displayReg: 'PlusJakartaSans_600SemiBold',
+  body: 'PlusJakartaSans_400Regular',
+  bodyMed: 'PlusJakartaSans_500Medium',
+  bodyBold: 'PlusJakartaSans_700Bold',
 };
 
 export const RADIUS = {
