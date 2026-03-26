@@ -19,13 +19,11 @@ import {
   INITIAL_ACTIVITY,
 } from './src/data';
 
-import OnboardingScreen from './src/screens/OnboardingScreen';
 import AppNavigator from './src/navigation/AppNavigator';
 
 function AppInner() {
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
 
-  const [onboarded, setOnboarded] = useState(false);
   const [fridgeItems, setFridgeItems] = useState(INITIAL_FRIDGE_ITEMS);
   const [shoppingList, setShoppingList] = useState(INITIAL_SHOPPING_LIST);
   const [mealPlan, setMealPlan] = useState(INITIAL_MEAL_PLAN);
@@ -44,19 +42,6 @@ function AppInner() {
       ...prev.slice(0, 9),
     ]);
   }, []);
-
-  if (!onboarded) {
-    return (
-      <>
-        <OnboardingScreen
-          onComplete={() => setOnboarded(true)}
-          userProfile={userProfile}
-          setUserProfile={setUserProfile}
-        />
-        <StatusBar style={isDark ? 'light' : 'dark'} />
-      </>
-    );
-  }
 
   return (
     <>
