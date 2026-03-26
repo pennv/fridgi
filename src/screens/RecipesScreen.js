@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   IngredientMatchBar,
@@ -20,6 +21,47 @@ import { MOCK_RECIPES } from '../data';
 import { ANTHROPIC_API_KEY, ANTHROPIC_URL, MODEL } from '../config';
 
 function RecipeRow({ recipe, onPress, index }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    recipeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+      gap: 12,
+    },
+    recipeEmojiWrap: {
+      width: 48,
+      height: 48,
+      borderRadius: RADIUS.md,
+      backgroundColor: COLORS.cardAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    recipeName: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    urgentDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: COLORS.danger,
+    },
+    recipeMeta: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+      marginBottom: 6,
+    },
+    chevron: {
+      fontSize: 20,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+  });
+
   const press = usePressScale(0.98);
   const anim = useStaggeredItem(index);
   const have = recipe.ingredients.filter((i) => i.fromFridge).length;
@@ -54,6 +96,88 @@ function RecipeRow({ recipe, onPress, index }) {
 }
 
 export default function RecipesScreen({ navigation, fridgeItems, savedRecipes, setSavedRecipes, addActivity }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 16 },
+    title: {
+      fontSize: 32,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+    },
+    tabBar: {
+      flexDirection: 'row',
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 4,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: RADIUS.lg,
+      alignItems: 'center',
+    },
+    tabActive: {
+      backgroundColor: COLORS.primary,
+    },
+    tabText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textMuted,
+    },
+    tabTextActive: {
+      color: '#fff',
+    },
+    toast: {
+      backgroundColor: COLORS.successLight,
+      borderRadius: RADIUS.xl,
+      padding: 14,
+      alignItems: 'center',
+    },
+    toastText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.success,
+    },
+    generateRow: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    generateTitle: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    generateSub: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+    chevron: {
+      fontSize: 20,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: COLORS.border,
+      marginLeft: 74,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingTop: 60,
+    },
+    emptyText: {
+      fontSize: 16,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+  });
+
   const [tab, setTab] = useState('forYou');
   const [recipes, setRecipes] = useState(MOCK_RECIPES);
   const [generating, setGenerating] = useState(false);
@@ -192,116 +316,3 @@ export default function RecipesScreen({ navigation, fridgeItems, savedRecipes, s
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 16 },
-  title: {
-    fontSize: 32,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: RADIUS.lg,
-    alignItems: 'center',
-  },
-  tabActive: {
-    backgroundColor: COLORS.primary,
-  },
-  tabText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textMuted,
-  },
-  tabTextActive: {
-    color: '#fff',
-  },
-  toast: {
-    backgroundColor: COLORS.successLight,
-    borderRadius: RADIUS.xl,
-    padding: 14,
-    alignItems: 'center',
-  },
-  toastText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.success,
-  },
-  generateRow: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  generateTitle: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  generateSub: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  chevron: {
-    fontSize: 20,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  recipeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 12,
-  },
-  recipeEmojiWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.cardAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recipeName: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  urgentDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: COLORS.danger,
-  },
-  recipeMeta: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-    marginBottom: 6,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.border,
-    marginLeft: 74,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-});

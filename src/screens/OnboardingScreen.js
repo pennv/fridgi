@@ -8,7 +8,8 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, usePressScale } from '../components/useAnimations';
 import { PrimaryButton, GhostButton, hapticSelection, hapticMedium, hapticSuccess } from '../components/shared';
 
@@ -21,6 +22,176 @@ const DIETARY_OPTIONS = [
 ];
 
 export default function OnboardingScreen({ onComplete, userProfile, setUserProfile }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.bg,
+      paddingHorizontal: 24,
+      paddingTop: 60,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    scrollCenter: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingBottom: 40,
+    },
+    logo: {
+      fontSize: 80,
+      marginBottom: 16,
+    },
+    appName: {
+      fontSize: 36,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+      marginBottom: 8,
+    },
+    tagline: {
+      fontSize: 16,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    dotsRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: COLORS.cardAlt,
+    },
+    dotActive: {
+      backgroundColor: COLORS.primary,
+      width: 24,
+    },
+    backBtn: {
+      marginTop: 8,
+    },
+    backText: {
+      fontSize: 16,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.primary,
+    },
+    stepTitle: {
+      fontSize: 28,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    stepSub: {
+      fontSize: 15,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      textAlign: 'center',
+    },
+    input: {
+      width: '100%',
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+      fontSize: 16,
+      fontFamily: FONTS.body,
+      color: COLORS.text,
+      marginTop: 32,
+    },
+    stepperRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 24,
+    },
+    stepperBtn: {
+      width: 44,
+      height: 44,
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.full,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    stepperBtnText: {
+      fontSize: 22,
+      color: COLORS.text,
+      fontFamily: FONTS.bodyBold,
+    },
+    stepperValue: {
+      fontSize: 32,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+      minWidth: 40,
+      textAlign: 'center',
+    },
+    chipGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginTop: 24,
+      justifyContent: 'center',
+    },
+    chip: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    chipActive: {
+      backgroundColor: COLORS.primary + '33',
+    },
+    chipText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textSub,
+    },
+    chipTextActive: {
+      color: COLORS.primary,
+    },
+    socialBtn: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.full,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    socialBtnText: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    optionCard: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 24,
+      alignItems: 'center',
+    },
+    optionEmoji: {
+      fontSize: 40,
+      marginBottom: 12,
+    },
+    optionTitle: {
+      fontSize: 17,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      marginBottom: 4,
+    },
+    optionSub: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    skipText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.primary,
+    },
+  });
+
   const [step, setStep] = useState(0);
   const [name, setName] = useState(userProfile.name || '');
   const [household, setHousehold] = useState(userProfile.household || 2);
@@ -221,172 +392,3 @@ export default function OnboardingScreen({ onComplete, userProfile, setUserProfi
 
   return null;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollCenter: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 40,
-  },
-  logo: {
-    fontSize: 80,
-    marginBottom: 16,
-  },
-  appName: {
-    fontSize: 36,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  tagline: {
-    fontSize: 16,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.cardAlt,
-  },
-  dotActive: {
-    backgroundColor: COLORS.primary,
-    width: 24,
-  },
-  backBtn: {
-    marginTop: 8,
-  },
-  backText: {
-    fontSize: 16,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.primary,
-  },
-  stepTitle: {
-    fontSize: 28,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  stepSub: {
-    fontSize: 15,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-  },
-  input: {
-    width: '100%',
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-    fontSize: 16,
-    fontFamily: FONTS.body,
-    color: COLORS.text,
-    marginTop: 32,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  stepperBtn: {
-    width: 44,
-    height: 44,
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepperBtnText: {
-    fontSize: 22,
-    color: COLORS.text,
-    fontFamily: FONTS.bodyBold,
-  },
-  stepperValue: {
-    fontSize: 32,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-    minWidth: 40,
-    textAlign: 'center',
-  },
-  chipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 24,
-    justifyContent: 'center',
-  },
-  chip: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  chipActive: {
-    backgroundColor: COLORS.primary + '33',
-  },
-  chipText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textSub,
-  },
-  chipTextActive: {
-    color: COLORS.primary,
-  },
-  socialBtn: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.full,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  socialBtnText: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  optionCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 24,
-    alignItems: 'center',
-  },
-  optionEmoji: {
-    fontSize: 40,
-    marginBottom: 12,
-  },
-  optionTitle: {
-    fontSize: 17,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  optionSub: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  skipText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.primary,
-  },
-});

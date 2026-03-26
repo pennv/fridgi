@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   ExpiryBadge,
@@ -25,6 +26,23 @@ function getGreeting() {
 }
 
 function PressableButton({ label, icon, onPress, style: extraStyle }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    scanBtn: {
+      backgroundColor: COLORS.primary,
+      borderRadius: RADIUS.full,
+      paddingVertical: 15,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scanBtnText: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyBold,
+      color: '#fff',
+    },
+  });
+
   const press = usePressScale(0.96);
   return (
     <Animated.View style={press.style}>
@@ -43,6 +61,32 @@ function PressableButton({ label, icon, onPress, style: extraStyle }) {
 }
 
 function DayPill({ day, date, isToday }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    dayPill: {
+      width: 52,
+      paddingVertical: 12,
+      borderRadius: RADIUS.xl,
+      backgroundColor: COLORS.card,
+      alignItems: 'center',
+      gap: 4,
+    },
+    dayPillActive: {
+      borderWidth: 1.5,
+      borderColor: COLORS.primary,
+    },
+    dayPillDay: {
+      fontSize: 12,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textMuted,
+    },
+    dayPillDate: {
+      fontSize: 16,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textSub,
+    },
+  });
+
   return (
     <View style={[styles.dayPill, isToday && styles.dayPillActive]}>
       <Text style={[styles.dayPillDay, isToday && { color: COLORS.primary }]}>{day}</Text>
@@ -52,6 +96,115 @@ function DayPill({ day, date, isToday }) {
 }
 
 export default function HomeScreen({ navigation, fridgeItems, mealPlan, activityFeed, userProfile }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.bg,
+    },
+    content: {
+      padding: 24,
+      paddingTop: 60,
+      paddingBottom: 110,
+      gap: 24,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    greeting: {
+      fontSize: 15,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    userName: {
+      fontSize: 28,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+      marginTop: 2,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: COLORS.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarText: {
+      fontSize: 18,
+      fontFamily: FONTS.bodyBold,
+      color: '#fff',
+    },
+    alertBanner: {
+      backgroundColor: COLORS.dangerLight,
+      borderRadius: RADIUS.xl,
+      padding: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    alertDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: COLORS.danger,
+      marginRight: 10,
+    },
+    alertText: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.danger,
+    },
+    alertAction: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.danger,
+    },
+    expiringRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+    },
+    expiringEmoji: {
+      fontSize: 24,
+      marginRight: 12,
+    },
+    expiringName: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    expiringQty: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: COLORS.border,
+      marginLeft: 52,
+    },
+    activityRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+    },
+    activityText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    activityTime: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textDim,
+      marginTop: 2,
+    },
+  });
+
   const anim0 = useStaggeredItem(0);
   const anim1 = useStaggeredItem(1);
   const anim2 = useStaggeredItem(2);
@@ -233,146 +386,3 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
-  content: {
-    padding: 24,
-    paddingTop: 60,
-    paddingBottom: 110,
-    gap: 24,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  greeting: {
-    fontSize: 15,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  userName: {
-    fontSize: 28,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-    marginTop: 2,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 18,
-    fontFamily: FONTS.bodyBold,
-    color: '#fff',
-  },
-  scanBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.full,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scanBtnText: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyBold,
-    color: '#fff',
-  },
-  alertBanner: {
-    backgroundColor: COLORS.dangerLight,
-    borderRadius: RADIUS.xl,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  alertDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.danger,
-    marginRight: 10,
-  },
-  alertText: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.danger,
-  },
-  alertAction: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.danger,
-  },
-  expiringRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  expiringEmoji: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  expiringName: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  expiringQty: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.border,
-    marginLeft: 52,
-  },
-  dayPill: {
-    width: 52,
-    paddingVertical: 12,
-    borderRadius: RADIUS.xl,
-    backgroundColor: COLORS.card,
-    alignItems: 'center',
-    gap: 4,
-  },
-  dayPillActive: {
-    borderWidth: 1.5,
-    borderColor: COLORS.primary,
-  },
-  dayPillDay: {
-    fontSize: 12,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textMuted,
-  },
-  dayPillDate: {
-    fontSize: 16,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textSub,
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-  },
-  activityText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  activityTime: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textDim,
-    marginTop: 2,
-  },
-});

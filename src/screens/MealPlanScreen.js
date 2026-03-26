@@ -7,7 +7,8 @@ import {
   Modal,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   Card,
@@ -43,6 +44,46 @@ function getWeekDates(offset = 0) {
 }
 
 function MealSlot({ meal, type, onAdd, onRemove }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    emptySlot: {
+      borderWidth: 1,
+      borderColor: COLORS.borderLight,
+      borderStyle: 'dashed',
+      borderRadius: RADIUS.md,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    emptySlotText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textDim,
+    },
+    filledSlot: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: RADIUS.md,
+      padding: 12,
+    },
+    mealName: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    mealTime: {
+      fontSize: 11,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+    removeBtn: {
+      fontSize: 14,
+      color: COLORS.textDim,
+      padding: 4,
+    },
+  });
+
   const press = usePressScale(0.97);
 
   if (!meal) {
@@ -76,6 +117,136 @@ function MealSlot({ meal, type, onAdd, onRemove }) {
 }
 
 export default function MealPlanScreen({ mealPlan, setMealPlan, addActivity }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 12 },
+    title: {
+      fontSize: 32,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+    },
+    weekNav: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 20,
+    },
+    weekArrow: {
+      fontSize: 24,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.primary,
+      padding: 8,
+    },
+    weekLabel: {
+      fontSize: 16,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+      minWidth: 100,
+      textAlign: 'center',
+    },
+    statsStrip: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    statItem: {
+      flex: 1,
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 24,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+    },
+    statLabel: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 4,
+    },
+    dayCard: {
+      padding: 16,
+      gap: 8,
+    },
+    dayCardToday: {
+      borderWidth: 1,
+      borderColor: COLORS.primary + '44',
+    },
+    dayHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    dayName: {
+      fontSize: 16,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+    },
+    dayDate: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: COLORS.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: COLORS.card,
+      borderTopLeftRadius: RADIUS.xxl,
+      borderTopRightRadius: RADIUS.xxl,
+      maxHeight: '60%',
+      paddingBottom: 40,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 20,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: COLORS.border,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      textTransform: 'capitalize',
+    },
+    modalClose: {
+      fontSize: 18,
+      color: COLORS.textMuted,
+      padding: 4,
+    },
+    mealOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: COLORS.border,
+    },
+    mealOptionName: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    mealOptionTime: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+    chevron: {
+      fontSize: 20,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+  });
+
   const [weekOffset, setWeekOffset] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -213,168 +384,3 @@ export default function MealPlanScreen({ mealPlan, setMealPlan, addActivity }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 12 },
-  title: {
-    fontSize: 32,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-  },
-  weekNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-  },
-  weekArrow: {
-    fontSize: 24,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.primary,
-    padding: 8,
-  },
-  weekLabel: {
-    fontSize: 16,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-    minWidth: 100,
-    textAlign: 'center',
-  },
-  statsStrip: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  statItem: {
-    flex: 1,
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 4,
-  },
-  dayCard: {
-    padding: 16,
-    gap: 8,
-  },
-  dayCardToday: {
-    borderWidth: 1,
-    borderColor: COLORS.primary + '44',
-  },
-  dayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  dayName: {
-    fontSize: 16,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-  },
-  dayDate: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  emptySlot: {
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-    borderStyle: 'dashed',
-    borderRadius: RADIUS.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  emptySlotText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textDim,
-  },
-  filledSlot: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.cardAlt,
-    borderRadius: RADIUS.md,
-    padding: 12,
-  },
-  mealName: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  mealTime: {
-    fontSize: 11,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  removeBtn: {
-    fontSize: 14,
-    color: COLORS.textDim,
-    padding: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: COLORS.overlay,
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: COLORS.card,
-    borderTopLeftRadius: RADIUS.xxl,
-    borderTopRightRadius: RADIUS.xxl,
-    maxHeight: '60%',
-    paddingBottom: 40,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    textTransform: 'capitalize',
-  },
-  modalClose: {
-    fontSize: 18,
-    color: COLORS.textMuted,
-    padding: 4,
-  },
-  mealOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  mealOptionName: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  mealOptionTime: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  chevron: {
-    fontSize: 20,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-});

@@ -7,7 +7,8 @@ import {
   Switch,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, useStaggeredItem } from '../components/useAnimations';
 import { PillRow, hapticSelection, hapticLight } from '../components/shared';
 
@@ -18,6 +19,132 @@ const DIETARY_OPTIONS = [
 ];
 
 export default function ProfileDrawer({ navigation, userProfile, setUserProfile }) {
+  const { colors: COLORS, preference, setPreference } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    content: { padding: 24, paddingTop: 60, paddingBottom: 40, gap: 24 },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 18,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+    },
+    closeBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: COLORS.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    closeBtnText: {
+      fontSize: 18,
+      color: COLORS.textSub,
+    },
+    profileCard: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 24,
+      alignItems: 'center',
+    },
+    avatar: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: COLORS.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    avatarText: {
+      fontSize: 28,
+      fontFamily: FONTS.bodyBold,
+      color: '#fff',
+    },
+    profileName: {
+      fontSize: 20,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      marginBottom: 4,
+    },
+    profileSub: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    sectionLabel: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textMuted,
+      letterSpacing: 0.8,
+      marginBottom: 10,
+    },
+    chipGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    chip: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    chipActive: {
+      backgroundColor: COLORS.primary + '33',
+    },
+    chipText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textSub,
+    },
+    chipTextActive: {
+      color: COLORS.primary,
+    },
+    logOutBtn: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    logOutText: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.primary,
+    },
+    version: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textDim,
+      textAlign: 'center',
+    },
+    themeToggle: {
+      flexDirection: 'row',
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: RADIUS.full,
+      padding: 3,
+    },
+    themeOption: {
+      flex: 1,
+      paddingVertical: 8,
+      alignItems: 'center',
+      borderRadius: RADIUS.full,
+    },
+    themeOptionActive: {
+      backgroundColor: COLORS.card,
+    },
+    themeOptionText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textMuted,
+    },
+    themeOptionTextActive: {
+      color: COLORS.text,
+    },
+  });
+
   const [notifications, setNotifications] = useState(true);
   const [lowStockAlerts, setLowStockAlerts] = useState(true);
 
@@ -105,6 +232,20 @@ export default function ProfileDrawer({ navigation, userProfile, setUserProfile 
           <PillRow icon="🔒" label="Security" onPress={() => {}} />
           <PillRow icon="📄" label="Statements" onPress={() => {}} />
           <PillRow icon="🔗" label="Data Sharing" onPress={() => {}} />
+          {/* Theme preference toggle */}
+          <View style={styles.themeToggle}>
+            {['dark', 'auto', 'light'].map((opt) => (
+              <TouchableOpacity
+                key={opt}
+                style={[styles.themeOption, preference === opt && styles.themeOptionActive]}
+                onPress={() => { hapticSelection(); setPreference(opt); }}
+              >
+                <Text style={[styles.themeOptionText, preference === opt && styles.themeOptionTextActive]}>
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </Animated.View>
 
@@ -146,105 +287,3 @@ export default function ProfileDrawer({ navigation, userProfile, setUserProfile 
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 24, paddingTop: 60, paddingBottom: 40, gap: 24 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-  },
-  closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeBtnText: {
-    fontSize: 18,
-    color: COLORS.textSub,
-  },
-  profileCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 24,
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  avatarText: {
-    fontSize: 28,
-    fontFamily: FONTS.bodyBold,
-    color: '#fff',
-  },
-  profileName: {
-    fontSize: 20,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  profileSub: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textMuted,
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
-  chipGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  chipActive: {
-    backgroundColor: COLORS.primary + '33',
-  },
-  chipText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textSub,
-  },
-  chipTextActive: {
-    color: COLORS.primary,
-  },
-  logOutBtn: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  logOutText: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.primary,
-  },
-  version: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textDim,
-    textAlign: 'center',
-  },
-});

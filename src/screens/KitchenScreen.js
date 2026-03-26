@@ -8,7 +8,8 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   ExpiryBadge,
@@ -23,6 +24,168 @@ import {
 import { LOCATIONS } from '../data';
 
 export default function KitchenScreen({ fridgeItems, setFridgeItems, shoppingList, setShoppingList, addActivity }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    content: { padding: 24, paddingTop: 60, paddingBottom: 110 },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    title: {
+      fontSize: 32,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+    },
+    addPill: {
+      backgroundColor: COLORS.primary,
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    addPillText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyBold,
+      color: '#fff',
+    },
+    addForm: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+      marginBottom: 16,
+      gap: 12,
+    },
+    addRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    input: {
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: RADIUS.md,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 14,
+      fontFamily: FONTS.body,
+      color: COLORS.text,
+    },
+    locationChips: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    locChip: {
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    locChipActive: {
+      backgroundColor: COLORS.primary + '33',
+    },
+    locChipText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textMuted,
+    },
+    locChipTextActive: {
+      color: COLORS.primary,
+    },
+    searchInput: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 15,
+      fontFamily: FONTS.body,
+      color: COLORS.text,
+      marginBottom: 12,
+    },
+    filterChip: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    filterChipActive: {
+      backgroundColor: COLORS.primary,
+    },
+    filterChipText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textMuted,
+    },
+    filterChipTextActive: {
+      color: '#fff',
+    },
+    countText: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textDim,
+      marginBottom: 16,
+    },
+    categoryLabel: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textMuted,
+      letterSpacing: 0.8,
+      marginBottom: 8,
+    },
+    itemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+      gap: 12,
+    },
+    itemEmoji: {
+      width: 40,
+      height: 40,
+      borderRadius: RADIUS.md,
+      backgroundColor: COLORS.cardAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    itemName: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    itemSub: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+    addCircle: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: COLORS.cardAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: 8,
+    },
+    addCircleText: {
+      fontSize: 18,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: COLORS.border,
+      marginLeft: 64,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingTop: 60,
+    },
+    emptyText: {
+      fontSize: 16,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+  });
+
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
@@ -244,164 +407,3 @@ export default function KitchenScreen({ fridgeItems, setFridgeItems, shoppingLis
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 24, paddingTop: 60, paddingBottom: 110 },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-  },
-  addPill: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  addPillText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyBold,
-    color: '#fff',
-  },
-  addForm: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-    marginBottom: 16,
-    gap: 12,
-  },
-  addRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  input: {
-    backgroundColor: COLORS.cardAlt,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    fontFamily: FONTS.body,
-    color: COLORS.text,
-  },
-  locationChips: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  locChip: {
-    backgroundColor: COLORS.cardAlt,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  locChipActive: {
-    backgroundColor: COLORS.primary + '33',
-  },
-  locChipText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textMuted,
-  },
-  locChipTextActive: {
-    color: COLORS.primary,
-  },
-  searchInput: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    fontFamily: FONTS.body,
-    color: COLORS.text,
-    marginBottom: 12,
-  },
-  filterChip: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  filterChipActive: {
-    backgroundColor: COLORS.primary,
-  },
-  filterChipText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textMuted,
-  },
-  filterChipTextActive: {
-    color: '#fff',
-  },
-  countText: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textDim,
-    marginBottom: 16,
-  },
-  categoryLabel: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textMuted,
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 12,
-  },
-  itemEmoji: {
-    width: 40,
-    height: 40,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.cardAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  itemName: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  itemSub: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  addCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.cardAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  addCircleText: {
-    fontSize: 18,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.border,
-    marginLeft: 64,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-});

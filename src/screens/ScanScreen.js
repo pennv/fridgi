@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, useSuccessFlash } from '../components/useAnimations';
 import {
   PrimaryButton,
@@ -27,6 +28,206 @@ import { ANTHROPIC_API_KEY, ANTHROPIC_URL, MODEL } from '../config';
 const { width } = Dimensions.get('window');
 
 export default function ScanScreen({ navigation, setFridgeItems, addActivity }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 60,
+      paddingBottom: 12,
+    },
+    closeBtn: {
+      fontSize: 22,
+      color: COLORS.textSub,
+      width: 32,
+      textAlign: 'center',
+    },
+    title: {
+      fontSize: 18,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+    },
+    modeBar: {
+      flexDirection: 'row',
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 4,
+      marginHorizontal: 24,
+      marginBottom: 16,
+    },
+    modeTab: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: RADIUS.lg,
+      alignItems: 'center',
+    },
+    modeTabActive: {
+      backgroundColor: COLORS.primary,
+    },
+    modeText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textMuted,
+    },
+    modeTextActive: {
+      color: '#fff',
+    },
+    camera: {
+      flex: 1,
+      borderRadius: RADIUS.xl,
+      marginHorizontal: 24,
+      overflow: 'hidden',
+    },
+    finderOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginHorizontal: 24,
+    },
+    finderCorner: {
+      width: 220,
+      height: 220,
+      borderWidth: 3,
+      borderColor: COLORS.primary,
+      borderRadius: RADIUS.xl,
+      opacity: 0.6,
+    },
+    successFlash: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: COLORS.success,
+      opacity: 0,
+      marginHorizontal: 24,
+      borderRadius: RADIUS.xl,
+    },
+    permissionWrap: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 40,
+      gap: 20,
+    },
+    permissionText: {
+      fontSize: 16,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      textAlign: 'center',
+    },
+    resultWrap: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 24,
+    },
+    resultCard: {
+      alignItems: 'center',
+      marginHorizontal: 24,
+      width: width - 48,
+    },
+    resultName: {
+      fontSize: 20,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      marginBottom: 4,
+    },
+    resultCode: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    receiptContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 40,
+      gap: 12,
+    },
+    receiptStart: {
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    receiptTitle: {
+      fontSize: 20,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      marginBottom: 4,
+    },
+    receiptSub: {
+      fontSize: 14,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    loadingCard: {
+      alignItems: 'center',
+      paddingVertical: 40,
+      gap: 16,
+    },
+    loadingText: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    progressTrack: {
+      width: '80%',
+      height: 4,
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: COLORS.primary,
+      borderRadius: 2,
+    },
+    reviewTitle: {
+      fontSize: 20,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+    },
+    reviewSub: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    reviewList: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      overflow: 'hidden',
+    },
+    reviewRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: COLORS.border,
+    },
+    reviewCheck: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: COLORS.borderLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    reviewCheckActive: {
+      backgroundColor: COLORS.primary,
+      borderColor: COLORS.primary,
+    },
+    reviewName: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    reviewQty: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+  });
+
   const [mode, setMode] = useState('receipt');
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -306,202 +507,3 @@ export default function ScanScreen({ navigation, setFridgeItems, addActivity }) 
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 12,
-  },
-  closeBtn: {
-    fontSize: 22,
-    color: COLORS.textSub,
-    width: 32,
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-  },
-  modeBar: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 4,
-    marginHorizontal: 24,
-    marginBottom: 16,
-  },
-  modeTab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: RADIUS.lg,
-    alignItems: 'center',
-  },
-  modeTabActive: {
-    backgroundColor: COLORS.primary,
-  },
-  modeText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textMuted,
-  },
-  modeTextActive: {
-    color: '#fff',
-  },
-  camera: {
-    flex: 1,
-    borderRadius: RADIUS.xl,
-    marginHorizontal: 24,
-    overflow: 'hidden',
-  },
-  finderOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 24,
-  },
-  finderCorner: {
-    width: 220,
-    height: 220,
-    borderWidth: 3,
-    borderColor: COLORS.primary,
-    borderRadius: RADIUS.xl,
-    opacity: 0.6,
-  },
-  successFlash: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: COLORS.success,
-    opacity: 0,
-    marginHorizontal: 24,
-    borderRadius: RADIUS.xl,
-  },
-  permissionWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    gap: 20,
-  },
-  permissionText: {
-    fontSize: 16,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-  },
-  resultWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 24,
-  },
-  resultCard: {
-    alignItems: 'center',
-    marginHorizontal: 24,
-    width: width - 48,
-  },
-  resultName: {
-    fontSize: 20,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  resultCode: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  receiptContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    gap: 12,
-  },
-  receiptStart: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  receiptTitle: {
-    fontSize: 20,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  receiptSub: {
-    fontSize: 14,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  loadingCard: {
-    alignItems: 'center',
-    paddingVertical: 40,
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  progressTrack: {
-    width: '80%',
-    height: 4,
-    backgroundColor: COLORS.cardAlt,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: COLORS.primary,
-    borderRadius: 2,
-  },
-  reviewTitle: {
-    fontSize: 20,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-  },
-  reviewSub: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  reviewList: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-  },
-  reviewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  reviewCheck: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: COLORS.borderLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  reviewCheckActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  reviewName: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  reviewQty: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-});

@@ -7,7 +7,8 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   PrimaryButton,
@@ -20,6 +21,170 @@ import {
 } from '../components/shared';
 
 export default function ShoppingScreen({ shoppingList, setShoppingList, fridgeItems, addActivity }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 16 },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    title: {
+      fontSize: 32,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+    },
+    subtitle: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 4,
+    },
+    addPill: {
+      backgroundColor: COLORS.primary,
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    addPillText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyBold,
+      color: '#fff',
+    },
+    clearPill: {
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    clearPillText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.textMuted,
+    },
+    addForm: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+      gap: 12,
+    },
+    addRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    input: {
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: RADIUS.md,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 14,
+      fontFamily: FONTS.body,
+      color: COLORS.text,
+    },
+    suggestionsCard: {
+      borderWidth: 1,
+      borderColor: COLORS.warningLight,
+    },
+    suggestionsTitle: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+    },
+    suggestionsSub: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 4,
+    },
+    suggestionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    suggestionName: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    suggestionAdd: {
+      backgroundColor: COLORS.primary + '22',
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    suggestionAddText: {
+      fontSize: 12,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.primary,
+    },
+    categoryLabel: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textMuted,
+      letterSpacing: 0.8,
+      marginBottom: 8,
+    },
+    itemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+      gap: 12,
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: COLORS.borderLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: COLORS.primary,
+      borderColor: COLORS.primary,
+    },
+    checkboxFill: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: COLORS.primary,
+    },
+    itemName: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    itemNameDone: {
+      fontSize: 15,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      textDecorationLine: 'line-through',
+      flex: 1,
+      marginLeft: 12,
+    },
+    itemQty: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: COLORS.border,
+      marginLeft: 50,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingTop: 60,
+    },
+    emptyText: {
+      fontSize: 16,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+  });
+
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newQty, setNewQty] = useState('1');
@@ -242,166 +407,3 @@ export default function ShoppingScreen({ shoppingList, setShoppingList, fridgeIt
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 16 },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 4,
-  },
-  addPill: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  addPillText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyBold,
-    color: '#fff',
-  },
-  clearPill: {
-    backgroundColor: COLORS.cardAlt,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  clearPillText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.textMuted,
-  },
-  addForm: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-    gap: 12,
-  },
-  addRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  input: {
-    backgroundColor: COLORS.cardAlt,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    fontFamily: FONTS.body,
-    color: COLORS.text,
-  },
-  suggestionsCard: {
-    borderWidth: 1,
-    borderColor: COLORS.warningLight,
-  },
-  suggestionsTitle: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-  },
-  suggestionsSub: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 4,
-  },
-  suggestionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  suggestionName: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  suggestionAdd: {
-    backgroundColor: COLORS.primary + '22',
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  suggestionAddText: {
-    fontSize: 12,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.primary,
-  },
-  categoryLabel: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textMuted,
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 12,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: COLORS.borderLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  checkboxFill: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: COLORS.primary,
-  },
-  itemName: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  itemNameDone: {
-    fontSize: 15,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    textDecorationLine: 'line-through',
-    flex: 1,
-    marginLeft: 12,
-  },
-  itemQty: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.border,
-    marginLeft: 50,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-});

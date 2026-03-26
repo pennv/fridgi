@@ -7,13 +7,135 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, usePressScale } from '../components/useAnimations';
 import { hapticSelection, hapticMedium, hapticSuccess, hapticComplete, hapticDestructive } from '../components/shared';
 
 const { width } = Dimensions.get('window');
 
 export default function CookingModeScreen({ navigation, route, fridgeItems, setFridgeItems, addActivity }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.primaryDark,
+    },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 60,
+      paddingBottom: 12,
+    },
+    exitBtn: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: '#fff',
+      opacity: 0.8,
+    },
+    recipeName: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: '#fff',
+      flex: 1,
+      textAlign: 'center',
+      marginHorizontal: 12,
+    },
+    stepCount: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyBold,
+      color: '#fff',
+      opacity: 0.7,
+    },
+    progressTrack: {
+      height: 3,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      marginHorizontal: 20,
+      borderRadius: 2,
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: '#fff',
+      borderRadius: 2,
+    },
+    cardArea: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+    },
+    stepCard: {
+      backgroundColor: '#fff',
+      borderRadius: RADIUS.xxl,
+      padding: 32,
+      alignItems: 'center',
+    },
+    stepLabel: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.primary,
+      letterSpacing: 0.8,
+      marginBottom: 16,
+      textTransform: 'uppercase',
+    },
+    stepText: {
+      fontSize: 20,
+      fontFamily: FONTS.displayMed,
+      color: '#000',
+      textAlign: 'center',
+      lineHeight: 28,
+    },
+    timerWrap: {
+      marginTop: 24,
+      alignItems: 'center',
+      backgroundColor: COLORS.bg,
+      borderRadius: RADIUS.xl,
+      paddingHorizontal: 28,
+      paddingVertical: 16,
+    },
+    timerText: {
+      fontSize: 36,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+    },
+    timerAction: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 4,
+    },
+    bottomBar: {
+      flexDirection: 'row',
+      gap: 12,
+      paddingHorizontal: 24,
+      paddingBottom: 50,
+    },
+    prevBtn: {
+      borderWidth: 1.5,
+      borderColor: 'rgba(255,255,255,0.3)',
+      borderRadius: RADIUS.full,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    prevBtnText: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: '#fff',
+    },
+    nextBtn: {
+      backgroundColor: COLORS.accent,
+      borderRadius: RADIUS.full,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    nextBtnText: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.accentText,
+    },
+  });
+
   const { recipe } = route.params;
   const [currentStep, setCurrentStep] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
@@ -177,123 +299,3 @@ export default function CookingModeScreen({ navigation, route, fridgeItems, setF
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.primaryDark,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 12,
-  },
-  exitBtn: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: '#fff',
-    opacity: 0.8,
-  },
-  recipeName: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 12,
-  },
-  stepCount: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyBold,
-    color: '#fff',
-    opacity: 0.7,
-  },
-  progressTrack: {
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    marginHorizontal: 20,
-    borderRadius: 2,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 2,
-  },
-  cardArea: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  stepCard: {
-    backgroundColor: '#fff',
-    borderRadius: RADIUS.xxl,
-    padding: 32,
-    alignItems: 'center',
-  },
-  stepLabel: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.primary,
-    letterSpacing: 0.8,
-    marginBottom: 16,
-    textTransform: 'uppercase',
-  },
-  stepText: {
-    fontSize: 20,
-    fontFamily: FONTS.displayMed,
-    color: '#000',
-    textAlign: 'center',
-    lineHeight: 28,
-  },
-  timerWrap: {
-    marginTop: 24,
-    alignItems: 'center',
-    backgroundColor: COLORS.bg,
-    borderRadius: RADIUS.xl,
-    paddingHorizontal: 28,
-    paddingVertical: 16,
-  },
-  timerText: {
-    fontSize: 36,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-  },
-  timerAction: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 4,
-  },
-  bottomBar: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingBottom: 50,
-  },
-  prevBtn: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: RADIUS.full,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  prevBtnText: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: '#fff',
-  },
-  nextBtn: {
-    backgroundColor: COLORS.accent,
-    borderRadius: RADIUS.full,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  nextBtnText: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.accentText,
-  },
-});

@@ -5,7 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, usePressScale } from './useAnimations';
 import * as Haptics from 'expo-haptics';
 
@@ -19,6 +20,27 @@ export const hapticError = () => Haptics.notificationAsync(Haptics.NotificationF
 export const hapticDestructive = () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 
 export function ExpiryBadge({ days }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    expiryBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: RADIUS.full,
+      gap: 4,
+    },
+    expiryDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    expiryText: {
+      fontSize: 11,
+      fontFamily: FONTS.bodyBold,
+    },
+  });
+
   let color = COLORS.success;
   let bgColor = COLORS.successLight;
   let label = `${days}d`;
@@ -40,15 +62,60 @@ export function ExpiryBadge({ days }) {
   );
 }
 
-export function Tag({ label, color = COLORS.primary }) {
+export function Tag({ label, color }) {
+  const { colors: COLORS } = useTheme();
+  const resolvedColor = color ?? COLORS.primary;
+  const styles = StyleSheet.create({
+    tag: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: RADIUS.full,
+    },
+    tagText: {
+      fontSize: 11,
+      fontFamily: FONTS.bodyMed,
+    },
+  });
+
   return (
-    <View style={[styles.tag, { backgroundColor: color + '33' }]}>
-      <Text style={[styles.tagText, { color }]}>{label}</Text>
+    <View style={[styles.tag, { backgroundColor: resolvedColor + '33' }]}>
+      <Text style={[styles.tagText, { color: resolvedColor }]}>{label}</Text>
     </View>
   );
 }
 
 export function PillRow({ icon, label, value, onPress, right, hasSwitch }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    pillRow: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    pillRowIcon: {
+      fontSize: 20,
+      marginRight: 12,
+    },
+    pillRowLabel: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    pillRowValue: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginRight: 8,
+    },
+    chevron: {
+      fontSize: 20,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+  });
+
   const press = usePressScale(0.97);
 
   return (
@@ -74,6 +141,26 @@ export function PillRow({ icon, label, value, onPress, right, hasSwitch }) {
 }
 
 export function PrimaryButton({ label, onPress, disabled, icon, style: extraStyle }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    primaryBtn: {
+      backgroundColor: COLORS.primary,
+      borderRadius: RADIUS.full,
+      paddingVertical: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+    },
+    primaryBtnDisabled: {
+      opacity: 0.5,
+    },
+    primaryBtnText: {
+      fontFamily: FONTS.bodyBold,
+      color: '#fff',
+      fontSize: 15,
+    },
+  });
+
   const press = usePressScale(0.96);
 
   return (
@@ -93,25 +180,49 @@ export function PrimaryButton({ label, onPress, disabled, icon, style: extraStyl
   );
 }
 
-export function GhostButton({ label, onPress, color = COLORS.primary }) {
+export function GhostButton({ label, onPress, color }) {
+  const { colors: COLORS } = useTheme();
+  const resolvedColor = color ?? COLORS.primary;
+  const styles = StyleSheet.create({
+    ghostBtn: {
+      borderWidth: 1,
+      borderRadius: RADIUS.full,
+      paddingVertical: 13,
+      alignItems: 'center',
+    },
+    ghostBtnText: {
+      fontFamily: FONTS.bodyMed,
+      fontSize: 15,
+    },
+  });
+
   const press = usePressScale(0.96);
 
   return (
     <Animated.View style={press.style}>
       <TouchableOpacity
-        style={[styles.ghostBtn, { borderColor: color }]}
+        style={[styles.ghostBtn, { borderColor: resolvedColor }]}
         onPress={() => { hapticLight(); onPress?.(); }}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
         activeOpacity={1}
       >
-        <Text style={[styles.ghostBtnText, { color }]}>{label}</Text>
+        <Text style={[styles.ghostBtnText, { color: resolvedColor }]}>{label}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
 export function Card({ children, style, onPress }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    card: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+    },
+  });
+
   const press = usePressScale(0.98);
 
   if (onPress) {
@@ -134,6 +245,30 @@ export function Card({ children, style, onPress }) {
 }
 
 export function IngredientMatchBar({ have, total }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    matchBarWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    matchBarTrack: {
+      flex: 1,
+      height: 4,
+      backgroundColor: COLORS.cardAlt,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    matchBarFill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    matchBarLabel: {
+      fontSize: 11,
+      fontFamily: FONTS.bodyMed,
+    },
+  });
+
   const pct = total > 0 ? (have / total) * 100 : 0;
   const color = pct >= 80 ? COLORS.success : pct >= 50 ? COLORS.warning : COLORS.textMuted;
 
@@ -148,6 +283,21 @@ export function IngredientMatchBar({ have, total }) {
 }
 
 export function SectionTitle({ children, right }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    sectionTitleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+    },
+  });
+
   return (
     <View style={styles.sectionTitleRow}>
       <Text style={styles.sectionTitle}>{children}</Text>
@@ -157,6 +307,15 @@ export function SectionTitle({ children, right }) {
 }
 
 export function LinkText({ children, onPress }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    linkText: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.primary,
+    },
+  });
+
   return (
     <TouchableOpacity onPress={() => { hapticLight(); onPress?.(); }}>
       <Text style={styles.linkText}>{children}</Text>
@@ -165,10 +324,27 @@ export function LinkText({ children, onPress }) {
 }
 
 export function Divider() {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: COLORS.border,
+    },
+  });
+
   return <View style={styles.divider} />;
 }
 
 export function GroupedCard({ children }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    groupedCard: {
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      overflow: 'hidden',
+    },
+  });
+
   return (
     <View style={styles.groupedCard}>
       {children}
@@ -177,6 +353,46 @@ export function GroupedCard({ children }) {
 }
 
 export function GroupedRow({ icon, label, subtitle, value, onPress, right, isLast }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    groupedRowInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+    },
+    groupedRowIcon: {
+      fontSize: 20,
+      marginRight: 12,
+    },
+    groupedRowLabel: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    groupedRowSub: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 2,
+    },
+    groupedRowValue: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginRight: 8,
+    },
+    groupedDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: COLORS.border,
+      marginLeft: 52,
+    },
+    chevron: {
+      fontSize: 20,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+  });
+
   const press = usePressScale(0.98);
 
   return (
@@ -203,166 +419,3 @@ export function GroupedRow({ icon, label, subtitle, value, onPress, right, isLas
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  expiryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
-    gap: 4,
-  },
-  expiryDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  expiryText: {
-    fontSize: 11,
-    fontFamily: FONTS.bodyBold,
-  },
-  tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
-  },
-  tagText: {
-    fontSize: 11,
-    fontFamily: FONTS.bodyMed,
-  },
-  pillRow: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pillRowIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  pillRowLabel: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  pillRowValue: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginRight: 8,
-  },
-  chevron: {
-    fontSize: 20,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  primaryBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.full,
-    paddingVertical: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  primaryBtnDisabled: {
-    opacity: 0.5,
-  },
-  primaryBtnText: {
-    fontFamily: FONTS.bodyBold,
-    color: '#fff',
-    fontSize: 15,
-  },
-  ghostBtn: {
-    borderWidth: 1,
-    borderRadius: RADIUS.full,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  ghostBtnText: {
-    fontFamily: FONTS.bodyMed,
-    fontSize: 15,
-  },
-  card: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-  },
-  matchBarWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  matchBarTrack: {
-    flex: 1,
-    height: 4,
-    backgroundColor: COLORS.cardAlt,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  matchBarFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  matchBarLabel: {
-    fontSize: 11,
-    fontFamily: FONTS.bodyMed,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-  },
-  linkText: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.primary,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.border,
-  },
-  groupedCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-  },
-  groupedRowInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  groupedRowIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  groupedRowLabel: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  groupedRowSub: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  groupedRowValue: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginRight: 8,
-  },
-  groupedDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.border,
-    marginLeft: 52,
-  },
-});

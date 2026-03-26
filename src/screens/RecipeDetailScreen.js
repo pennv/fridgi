@@ -7,7 +7,8 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, useStaggeredItem } from '../components/useAnimations';
 import {
   PrimaryButton,
@@ -32,6 +33,169 @@ export default function RecipeDetailScreen({
   setFridgeItems,
   addActivity,
 }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    content: { padding: 24, paddingTop: 60, paddingBottom: 40, gap: 16 },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    backBtn: {
+      fontSize: 17,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.primary,
+    },
+    heroCard: {
+      alignItems: 'center',
+      paddingVertical: 28,
+    },
+    heroEmoji: {
+      fontSize: 64,
+      marginBottom: 12,
+    },
+    heroName: {
+      fontSize: 24,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    heroDesc: {
+      fontSize: 14,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginBottom: 16,
+    },
+    tagsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      justifyContent: 'center',
+    },
+    servingCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    servingLabel: {
+      fontSize: 15,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    stepperRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+    },
+    stepperBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: COLORS.cardAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    stepperText: {
+      fontSize: 20,
+      color: COLORS.text,
+      fontWeight: '600',
+    },
+    servingValue: {
+      fontSize: 20,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      minWidth: 30,
+      textAlign: 'center',
+    },
+    sectionLabel: {
+      fontSize: 17,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      marginBottom: 14,
+    },
+    nutritionGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    nutritionItem: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    nutritionVal: {
+      fontSize: 18,
+      fontFamily: FONTS.bodyBold,
+    },
+    nutritionLabel: {
+      fontSize: 11,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 4,
+    },
+    ingredientRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 8,
+      gap: 10,
+    },
+    ingredientDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    ingredientName: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: FONTS.body,
+      color: COLORS.text,
+    },
+    ingredientQty: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    stepRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 16,
+    },
+    stepNumber: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: COLORS.cardAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    stepNumberText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textSub,
+    },
+    stepText: {
+      fontSize: 14,
+      fontFamily: FONTS.body,
+      color: COLORS.text,
+      lineHeight: 20,
+    },
+    timerPill: {
+      backgroundColor: COLORS.primaryDark + '44',
+      borderRadius: RADIUS.full,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      alignSelf: 'flex-start',
+      marginTop: 8,
+    },
+    timerText: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.primary,
+    },
+  });
+
   const { recipe } = route.params;
   const [servings, setServings] = useState(recipe.servings);
   const isSaved = savedRecipes.some((r) => r.id === recipe.id);
@@ -230,165 +394,3 @@ export default function RecipeDetailScreen({
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 24, paddingTop: 60, paddingBottom: 40, gap: 16 },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  backBtn: {
-    fontSize: 17,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.primary,
-  },
-  heroCard: {
-    alignItems: 'center',
-    paddingVertical: 28,
-  },
-  heroEmoji: {
-    fontSize: 64,
-    marginBottom: 12,
-  },
-  heroName: {
-    fontSize: 24,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  heroDesc: {
-    fontSize: 14,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    justifyContent: 'center',
-  },
-  servingCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  servingLabel: {
-    fontSize: 15,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  stepperBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.cardAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepperText: {
-    fontSize: 20,
-    color: COLORS.text,
-    fontWeight: '600',
-  },
-  servingValue: {
-    fontSize: 20,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    minWidth: 30,
-    textAlign: 'center',
-  },
-  sectionLabel: {
-    fontSize: 17,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    marginBottom: 14,
-  },
-  nutritionGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  nutritionItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  nutritionVal: {
-    fontSize: 18,
-    fontFamily: FONTS.bodyBold,
-  },
-  nutritionLabel: {
-    fontSize: 11,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 4,
-  },
-  ingredientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    gap: 10,
-  },
-  ingredientDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  ingredientName: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: FONTS.body,
-    color: COLORS.text,
-  },
-  ingredientQty: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  stepRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  stepNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.cardAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepNumberText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textSub,
-  },
-  stepText: {
-    fontSize: 14,
-    fontFamily: FONTS.body,
-    color: COLORS.text,
-    lineHeight: 20,
-  },
-  timerPill: {
-    backgroundColor: COLORS.primaryDark + '44',
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignSelf: 'flex-start',
-    marginTop: 8,
-  },
-  timerText: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.primary,
-  },
-});

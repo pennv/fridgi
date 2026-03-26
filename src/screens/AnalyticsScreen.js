@@ -6,11 +6,34 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { COLORS, FONTS, RADIUS } from '../theme';
+import { FONTS, RADIUS } from '../theme';
+import { useTheme } from '../context/ThemeContext';
 import { Animated, useFadeInUp, useStaggeredItem } from '../components/useAnimations';
 import { Card, hapticLight } from '../components/shared';
 
 function StatCard({ value, label, color }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    statCard: {
+      flex: 1,
+      backgroundColor: COLORS.card,
+      borderRadius: RADIUS.xl,
+      padding: 16,
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 22,
+      fontFamily: FONTS.display,
+    },
+    statLabel: {
+      fontSize: 11,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 4,
+      textAlign: 'center',
+    },
+  });
+
   return (
     <View style={styles.statCard}>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
@@ -20,6 +43,38 @@ function StatCard({ value, label, color }) {
 }
 
 function BarChart({ data, maxVal, color }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    barChart: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      height: 120,
+      gap: 8,
+    },
+    barCol: {
+      flex: 1,
+      alignItems: 'center',
+      height: '100%',
+    },
+    barTrack: {
+      flex: 1,
+      width: '100%',
+      justifyContent: 'flex-end',
+    },
+    barFill: {
+      width: '100%',
+      borderRadius: 4,
+      minHeight: 4,
+    },
+    barLabel: {
+      fontSize: 10,
+      fontFamily: FONTS.body,
+      color: COLORS.textDim,
+      marginTop: 6,
+    },
+  });
+
   return (
     <View style={styles.barChart}>
       {data.map((d, i) => (
@@ -43,6 +98,126 @@ function BarChart({ data, maxVal, color }) {
 }
 
 export default function AnalyticsScreen({ navigation, fridgeItems, shoppingList }) {
+  const { colors: COLORS } = useTheme();
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.bg },
+    content: { padding: 24, paddingTop: 60, paddingBottom: 40, gap: 20 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    backBtn: {
+      fontSize: 17,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.primary,
+      width: 80,
+    },
+    title: {
+      fontSize: 18,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+    },
+    sectionLabel: {
+      fontSize: 13,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textMuted,
+      letterSpacing: 0.8,
+      marginBottom: 10,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    cardTitle: {
+      fontSize: 17,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.text,
+      marginBottom: 16,
+    },
+    calorieNum: {
+      fontSize: 28,
+      fontFamily: FONTS.display,
+      color: COLORS.text,
+    },
+    calorieSub: {
+      fontSize: 13,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginBottom: 16,
+    },
+    macroBar: {
+      flexDirection: 'row',
+      height: 10,
+      borderRadius: 5,
+      overflow: 'hidden',
+      gap: 2,
+    },
+    macroSegment: {
+      height: '100%',
+    },
+    macroLegend: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 12,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    legendDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    legendText: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+    },
+    cookedRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    cookedRank: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textDim,
+      width: 24,
+    },
+    cookedName: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: FONTS.bodyMed,
+      color: COLORS.text,
+    },
+    cookedCount: {
+      fontSize: 14,
+      fontFamily: FONTS.bodyBold,
+      color: COLORS.textMuted,
+    },
+    gridRow: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    gridCard: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    gridValue: {
+      fontSize: 28,
+      fontFamily: FONTS.display,
+    },
+    gridLabel: {
+      fontSize: 12,
+      fontFamily: FONTS.body,
+      color: COLORS.textMuted,
+      marginTop: 4,
+    },
+  });
+
   const headerAnim = useFadeInUp();
   const anim0 = useStaggeredItem(0);
   const anim1 = useStaggeredItem(1);
@@ -184,168 +359,3 @@ export default function AnalyticsScreen({ navigation, fridgeItems, shoppingList 
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  content: { padding: 24, paddingTop: 60, paddingBottom: 40, gap: 20 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backBtn: {
-    fontSize: 17,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.primary,
-    width: 80,
-  },
-  title: {
-    fontSize: 18,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textMuted,
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: COLORS.card,
-    borderRadius: RADIUS.xl,
-    padding: 16,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 22,
-    fontFamily: FONTS.display,
-  },
-  statLabel: {
-    fontSize: 11,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.text,
-    marginBottom: 16,
-  },
-  barChart: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    height: 120,
-    gap: 8,
-  },
-  barCol: {
-    flex: 1,
-    alignItems: 'center',
-    height: '100%',
-  },
-  barTrack: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'flex-end',
-  },
-  barFill: {
-    width: '100%',
-    borderRadius: 4,
-    minHeight: 4,
-  },
-  barLabel: {
-    fontSize: 10,
-    fontFamily: FONTS.body,
-    color: COLORS.textDim,
-    marginTop: 6,
-  },
-  calorieNum: {
-    fontSize: 28,
-    fontFamily: FONTS.display,
-    color: COLORS.text,
-  },
-  calorieSub: {
-    fontSize: 13,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginBottom: 16,
-  },
-  macroBar: {
-    flexDirection: 'row',
-    height: 10,
-    borderRadius: 5,
-    overflow: 'hidden',
-    gap: 2,
-  },
-  macroSegment: {
-    height: '100%',
-  },
-  macroLegend: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-  },
-  cookedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  cookedRank: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textDim,
-    width: 24,
-  },
-  cookedName: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: FONTS.bodyMed,
-    color: COLORS.text,
-  },
-  cookedCount: {
-    fontSize: 14,
-    fontFamily: FONTS.bodyBold,
-    color: COLORS.textMuted,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  gridCard: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  gridValue: {
-    fontSize: 28,
-    fontFamily: FONTS.display,
-  },
-  gridLabel: {
-    fontSize: 12,
-    fontFamily: FONTS.body,
-    color: COLORS.textMuted,
-    marginTop: 4,
-  },
-});

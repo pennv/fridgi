@@ -1,4 +1,4 @@
-export const COLORS = {
+export const DARK_COLORS = {
   bg: '#000000',
   bgAlt: '#0A0A0A',
   card: '#1C1C1E',
@@ -27,6 +27,39 @@ export const COLORS = {
   textInverse: '#000000',
   overlay: 'rgba(0,0,0,0.75)',
 };
+
+export const LIGHT_COLORS = {
+  bg: '#F2F2F7',
+  bgAlt: '#FFFFFF',
+  card: '#FFFFFF',
+  cardAlt: '#E5E5EA',
+  cardPress: '#D1D1D6',
+  border: '#E5E5EA',
+  borderLight: '#F2F2F7',
+  primary: '#007AFF',
+  primaryDark: '#0056CC',
+  primaryLight: '#4DA3FF',
+  accent: '#3A4800',
+  accentDark: '#2A3600',
+  accentText: '#3A4800',
+  danger: '#FF3B30',
+  dangerLight: '#FFE5E5',
+  success: '#34C759',
+  successLight: '#E5F9ED',
+  warning: '#FF9500',
+  warningLight: '#FFF3E0',
+  info: '#007AFF',
+  infoLight: '#E5F0FF',
+  text: '#000000',
+  textSub: 'rgba(60,60,67,0.85)',
+  textMuted: 'rgba(60,60,67,0.6)',
+  textDim: 'rgba(60,60,67,0.3)',
+  textInverse: '#FFFFFF',
+  overlay: 'rgba(0,0,0,0.4)',
+};
+
+// Legacy export — used by files not yet on dynamic theme
+export const COLORS = DARK_COLORS;
 
 export const FONTS = {
   display: 'PlusJakartaSans_800ExtraBold',

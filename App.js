@@ -10,7 +10,8 @@ import {
   PlusJakartaSans_800ExtraBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 
-import { COLORS } from './src/theme';
+import { DARK_COLORS } from './src/theme';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import {
   INITIAL_FRIDGE_ITEMS,
   INITIAL_SHOPPING_LIST,
@@ -21,14 +22,8 @@ import {
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import AppNavigator from './src/navigation/AppNavigator';
 
-export default function App() {
-  const [fontsLoaded] = useFonts({
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    PlusJakartaSans_800ExtraBold,
-  });
+function AppInner() {
+  const { colors, isDark } = useTheme();
 
   const [onboarded, setOnboarded] = useState(false);
   const [fridgeItems, setFridgeItems] = useState(INITIAL_FRIDGE_ITEMS);
@@ -50,15 +45,6 @@ export default function App() {
     ]);
   }, []);
 
-  if (!fontsLoaded) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <StatusBar style="light" />
-      </View>
-    );
-  }
-
   if (!onboarded) {
     return (
       <>
@@ -67,7 +53,7 @@ export default function App() {
           userProfile={userProfile}
           setUserProfile={setUserProfile}
         />
-        <StatusBar style="light" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
       </>
     );
   }
@@ -88,15 +74,40 @@ export default function App() {
         userProfile={userProfile}
         setUserProfile={setUserProfile}
       />
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
+  );
+}
+
+export default function App() {
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={DARK_COLORS.primary} />
+        <StatusBar style="light" />
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
   loader: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: DARK_COLORS.bg,
     justifyContent: 'center',
     alignItems: 'center',
   },
