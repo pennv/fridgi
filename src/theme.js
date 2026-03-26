@@ -1,0 +1,47 @@
+export const COLORS = {
+  bg: '#000000',
+  bgAlt: '#0A0A0A',
+  card: '#1C1C1E',
+  cardAlt: '#2C2C2E',
+  cardPress: '#3A3A3C',
+  border: '#2C2C2E',
+  borderLight: '#3A3A3C',
+  primary: '#007AFF',
+  primaryDark: '#0056CC',
+  primaryLight: '#4DA3FF',
+  accent: '#E8F5A3',
+  accentDark: '#CAD978',
+  accentText: '#3A4800',
+  danger: '#FF453A',
+  dangerLight: '#3D1A18',
+  success: '#32D74B',
+  successLight: '#0F2E14',
+  warning: '#FFD60A',
+  warningLight: '#2E2800',
+  info: '#64D2FF',
+  infoLight: '#0D2A35',
+  text: '#FFFFFF',
+  textSub: '#EBEBF5CC',
+  textMuted: '#EBEBF599',
+  textDim: '#EBEBF54D',
+  textInverse: '#000000',
+  overlay: 'rgba(0,0,0,0.75)',
+};
+
+export const FONTS = {
+  display: 'Fraunces_700Bold',
+  displayMed: 'Fraunces_600SemiBold',
+  displayReg: 'Fraunces_400Regular',
+  body: 'DMSans_400Regular',
+  bodyMed: 'DMSans_500Medium',
+  bodyBold: 'DMSans_700Bold',
+};
+
+export const RADIUS = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 28,
+  full: 999,
+};
