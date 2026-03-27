@@ -42,30 +42,33 @@ const TAB_ICONS = {
   Shopping: { icon: 'cart',               label: 'Shopping' },
 };
 
+const BUBBLE_W = 50;
+const BUBBLE_H = 50;
+
 const makeStyles = (COLORS, isDark) => StyleSheet.create({
   tabBarOuter: {
     position: 'absolute',
-    bottom: 28,
-    left: 12,
-    right: 12,
-    borderRadius: 40,
+    bottom: 24,
+    left: 20,
+    right: 20,
+    borderRadius: 36,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: isDark ? 0 : 8 },
-    shadowOpacity: isDark ? 0 : 0.18,
-    shadowRadius: isDark ? 0 : 24,
-    elevation: isDark ? 0 : 10,
+    shadowOffset: { width: 0, height: isDark ? 4 : 12 },
+    shadowOpacity: isDark ? 0.35 : 0.22,
+    shadowRadius: isDark ? 16 : 32,
+    elevation: isDark ? 8 : 14,
   },
   tabBarBlur: {
-    borderRadius: 40,
+    borderRadius: 36,
     overflow: 'hidden',
     borderWidth: isDark ? 0.5 : 0,
     borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'transparent',
   },
   tabBarInner: {
     flexDirection: 'row',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
     backgroundColor: isDark ? COLORS.bg + '26' : 'rgba(255,255,255,0.4)',
     position: 'relative',
   },
@@ -73,32 +76,30 @@ const makeStyles = (COLORS, isDark) => StyleSheet.create({
     position: 'absolute',
     overflow: 'hidden',
     backgroundColor: 'transparent',
+    borderRadius: BUBBLE_H / 2,
   },
   bubbleTint: {
-    backgroundColor: 'rgba(160,185,255,0.08)',
-    borderRadius: 999,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+    borderRadius: BUBBLE_H / 2,
   },
   bubbleRim: {
-    borderRadius: 999,
-    borderWidth: 0.8,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderRadius: BUBBLE_H / 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.7)',
   },
-  // Web: CSS backdrop-filter via RN Web style prop
   bubbleWeb: {
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    // @ts-ignore — web-only style
+    borderRadius: BUBBLE_H / 2,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     backdropFilter: 'blur(20px) saturate(180%)',
     WebkitBackdropFilter: 'blur(20px) saturate(180%)',
     overflow: 'hidden',
   },
   tabBarWeb: {
-    borderRadius: 40,
+    borderRadius: 36,
     overflow: 'hidden',
     borderWidth: 0.5,
     borderColor: 'rgba(255,255,255,0.08)',
     backgroundColor: COLORS.bg + '8C',
-    // @ts-ignore — web-only
     backdropFilter: 'blur(24px) saturate(160%)',
     WebkitBackdropFilter: 'blur(24px) saturate(160%)',
   },
@@ -106,12 +107,11 @@ const makeStyles = (COLORS, isDark) => StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 3,
   },
   tabIconWrap: {
-    width: 28,
-    height: 26,
-    borderRadius: 13,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -125,45 +125,52 @@ const makeStyles = (COLORS, isDark) => StyleSheet.create({
 function LiquidGlassBubble() {
   const { colors: COLORS, isDark } = useTheme();
   const styles = makeStyles(COLORS, isDark);
+  const r = BUBBLE_H / 2;
 
   // iOS 26+ — true native Liquid Glass
   if (glassSupported && GlassView) {
     return (
       <GlassView
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, { borderRadius: r }]}
         glassEffectStyle="regular"
         colorScheme={isDark ? 'dark' : 'light'}
       />
     );
   }
 
-  // Web — CSS backdrop-filter (widely supported)
+  // Web — CSS backdrop-filter
   if (Platform.OS === 'web') {
     return (
       <View style={[StyleSheet.absoluteFill, styles.bubbleWeb]}>
         <LinearGradient
-          colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.04)', 'transparent']}
-          start={{ x: 0.15, y: 0 }}
-          end={{ x: 0.85, y: 0.55 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: 999 }]}
+          colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.02)', 'transparent']}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          style={[StyleSheet.absoluteFill, { borderRadius: r }]}
         />
         <View style={[StyleSheet.absoluteFill, styles.bubbleRim]} />
       </View>
     );
   }
 
-  // Android 12+ and older iOS — BlurView + gradient layers
-  const blurTint = Platform.OS === 'android' ? 'dark' : 'systemUltraThinMaterialDark';
-  const blurIntensity = Platform.OS === 'android' ? 18 : 22;
+  // iOS / Android — BlurView + tint + specular highlight
+  const blurTint = isDark
+    ? (Platform.OS === 'ios' ? 'systemUltraThinMaterialDark' : 'dark')
+    : (Platform.OS === 'ios' ? 'systemUltraThinMaterialLight' : 'light');
+  const blurIntensity = Platform.OS === 'android' ? 16 : 20;
   return (
     <>
-      <BlurView intensity={blurIntensity} tint={blurTint} style={StyleSheet.absoluteFill} />
+      <BlurView intensity={blurIntensity} tint={blurTint} style={[StyleSheet.absoluteFill, { borderRadius: r }]} />
       <View style={[StyleSheet.absoluteFill, styles.bubbleTint]} />
       <LinearGradient
-        colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0.04)', 'transparent']}
-        start={{ x: 0.15, y: 0 }}
-        end={{ x: 0.85, y: 0.55 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: 999 }]}
+        colors={
+          isDark
+            ? ['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.02)', 'transparent']
+            : ['rgba(255,255,255,0.6)', 'rgba(255,255,255,0.1)', 'transparent']
+        }
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+        style={[StyleSheet.absoluteFill, { borderRadius: r }]}
       />
       <View style={[StyleSheet.absoluteFill, styles.bubbleRim]} />
     </>
@@ -194,28 +201,19 @@ function TabItemAnimated({ icon, label, focused }) {
   const { colors: COLORS, isDark } = useTheme();
   const styles = makeStyles(COLORS, isDark);
 
-  const scale = useRef(new Animated.Value(focused ? 1.3 : 1)).current;
-
-  React.useEffect(() => {
-    Animated.spring(scale, {
-      toValue: focused ? 1.3 : 1,
-      useNativeDriver: true,
-      damping: 14,
-      stiffness: 200,
-      mass: 0.6,
-    }).start();
-  }, [focused]);
+  const activeColor = '#34C759';
+  const inactiveColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)';
 
   return (
     <View style={styles.tabItem} pointerEvents="none">
-      <Animated.View style={[styles.tabIconWrap, { transform: [{ scale }] }]}>
+      <View style={styles.tabIconWrap}>
         <Ionicons
           name={focused ? icon : `${icon}-outline`}
-          size={22}
-          color={focused ? COLORS.primary : COLORS.textDim}
+          size={20}
+          color={focused ? activeColor : inactiveColor}
         />
-      </Animated.View>
-      <Text style={[styles.tabLabel, { color: focused ? COLORS.primary : COLORS.textDim }]}>{label}</Text>
+      </View>
+      <Text style={[styles.tabLabel, { color: focused ? activeColor : inactiveColor }]}>{label}</Text>
     </View>
   );
 }
@@ -226,7 +224,6 @@ function GlassTabBar({ state, descriptors, navigation }) {
 
   const [innerHeight, setInnerHeight] = React.useState(0);
   const count = state.routes.length;
-  const BUBBLE_SIZE = 58;
 
   // Use refs so PanResponder always reads fresh values
   const tabWidthRef = useRef(0);
@@ -302,7 +299,7 @@ function GlassTabBar({ state, descriptors, navigation }) {
     })
   ).current;
 
-  const bubbleTop = innerHeight > 0 ? (innerHeight - BUBBLE_SIZE) / 2 : 4;
+  const bubbleTop = innerHeight > 0 ? (innerHeight - BUBBLE_H) / 2 : 4;
 
   return (
     <View style={styles.tabBarOuter} pointerEvents="box-none">
@@ -323,11 +320,11 @@ function GlassTabBar({ state, descriptors, navigation }) {
               style={[
                 styles.bubble,
                 {
-                  width: BUBBLE_SIZE,
-                  height: BUBBLE_SIZE,
-                  borderRadius: BUBBLE_SIZE / 2,
+                  width: BUBBLE_W,
+                  height: BUBBLE_H,
                   top: bubbleTop,
-                  left: (tabWidth - BUBBLE_SIZE) / 2,
+                  left: (tabWidth - BUBBLE_W) / 2,
+                  borderRadius: BUBBLE_H / 2,
                   transform: [{ translateX: bubblePixelX }, { scaleX: bubbleScaleX }],
                 },
               ]}
