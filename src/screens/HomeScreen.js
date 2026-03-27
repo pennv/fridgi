@@ -1,12 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { FONTS, RADIUS } from '../theme';
+import { MOCK_RECIPES } from '../data';
 import { useTheme } from '../context/ThemeContext';
 import { Animated, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
@@ -59,7 +66,73 @@ function ScanButton({ label, icon, onPress }) {
   );
 }
 
-function StatCard({ value, label, accent, onPress }) {
+function ScrollableTable({ rows, renderRow, dividerLeft = 0, buttonDismissed, onButtonDismiss, scrollY }) {
+  const { colors: COLORS } = useTheme();
+  const scrollRef = useRef(null);
+  const extra = rows.length - 3;
+  const [showButton, setShowButton] = useState(extra > 0 && !buttonDismissed);
+
+  return (
+    <GroupedCard>
+      <View style={{ position: 'relative' }}>
+        <ScrollView
+          ref={scrollRef}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: 67 * 3 }}
+          contentOffset={scrollY ? { x: 0, y: scrollY.current } : undefined}
+          onScroll={(e) => {
+            const y = e.nativeEvent.contentOffset.y;
+            if (scrollY) scrollY.current = y;
+            if (y > 8) { setShowButton(false); onButtonDismiss?.(); }
+          }}
+          scrollEventThrottle={16}
+        >
+          {rows.map((row, i) => (
+            <React.Fragment key={i}>
+              {renderRow(row, i)}
+              {i < rows.length - 1 && (
+                <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: COLORS.border, marginLeft: dividerLeft }} />
+              )}
+            </React.Fragment>
+          ))}
+        </ScrollView>
+
+        {showButton && (
+          <TouchableOpacity
+            onPress={() => {
+              scrollRef.current?.scrollToEnd({ animated: true });
+              setShowButton(false);
+              onButtonDismiss?.();
+            }}
+            activeOpacity={0.8}
+            style={{ position: 'absolute', bottom: 10, left: 0, right: 0, alignItems: 'center' }}
+          >
+            <View style={{
+              backgroundColor: COLORS.card,
+              borderRadius: 20,
+              paddingHorizontal: 14,
+              paddingVertical: 6,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 6,
+              elevation: 4,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: COLORS.border,
+            }}>
+              <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: COLORS.textMuted }}>
+                ↓  {extra} more
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+    </GroupedCard>
+  );
+}
+
+function StatCard({ value, label, accent, onPress, onLongPress }) {
   const { colors: COLORS } = useTheme();
   const press = usePressScale(0.97);
   const styles = StyleSheet.create({
@@ -87,6 +160,7 @@ function StatCard({ value, label, accent, onPress }) {
       <TouchableOpacity
         style={styles.card}
         onPress={() => { hapticLight(); onPress?.(); }}
+        onLongPress={() => { hapticMedium(); onLongPress?.(); }}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
         activeOpacity={1}
@@ -165,6 +239,19 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
   const anim4 = useStaggeredItem(4);
 
   const [selectedDate, setSelectedDate] = useState(null); // null = All
+  const [showLocationBreakdown, setShowLocationBreakdown] = useState(false);
+  const [showExpiring, setShowExpiring] = useState(true);
+  const [showPerfectRecipes, setShowPerfectRecipes] = useState(false);
+  const [expiryThreshold, setExpiryThreshold] = useState(3);
+  const [showDaysPopup, setShowDaysPopup] = useState(false);
+  const [daysInput, setDaysInput] = useState('3');
+  const [daysError, setDaysError] = useState('');
+  const [locationBtnDismissed, setLocationBtnDismissed] = useState(false);
+  const [expiringBtnDismissed, setExpiringBtnDismissed] = useState(false);
+  const [perfectBtnDismissed, setPerfectBtnDismissed] = useState(false);
+  const locationScrollY = useRef(0);
+  const expiringScrollY = useRef(0);
+  const perfectScrollY = useRef(0);
 
   // Last 30 days
   const days = useMemo(() => {
@@ -191,14 +278,36 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
     return d.toLocaleDateString('en', { weekday: 'short', day: 'numeric' });
   }
 
-  const expiring = fridgeItems.filter((i) => i.expiryDays <= 3);
+  const expiring = fridgeItems.filter((i) => i.expiryDays <= expiryThreshold).sort((a, b) => a.expiryDays - b.expiryDays);
   const totalItems = fridgeItems.length;
-  const fridgeCount = fridgeItems.filter((i) => i.location === 'Fridge').length;
-  const mealsCount = Object.values(mealPlan || {}).reduce((acc, day) => {
-    return acc + Object.values(day || {}).filter(Boolean).length;
-  }, 0);
+  const locationCounts = {
+    Fridge: fridgeItems.filter((i) => i.location === 'Fridge').length,
+    Freezer: fridgeItems.filter((i) => i.location === 'Freezer').length,
+    Pantry: fridgeItems.filter((i) => i.location === 'Pantry').length,
+  };
+
+  const perfectRecipes = useMemo(() => {
+    const fridgeNames = fridgeItems.map((i) => i.name.toLowerCase());
+    return MOCK_RECIPES
+      .filter((recipe) =>
+        recipe.ingredients
+          .filter((ing) => ing.fromFridge)
+          .every((ing) => fridgeNames.includes(ing.name.toLowerCase()))
+      )
+      .map((recipe) => {
+        const expiringCount = recipe.ingredients.filter((ing) =>
+          ing.fromFridge &&
+          fridgeItems.find(
+            (fi) => fi.name.toLowerCase() === ing.name.toLowerCase() && fi.expiryDays <= expiryThreshold
+          )
+        ).length;
+        return { ...recipe, expiringCount };
+      })
+      .sort((a, b) => b.expiringCount - a.expiringCount);
+  }, [fridgeItems, expiryThreshold]);
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
       {/* Header */}
@@ -228,47 +337,73 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
       <Animated.View style={[styles.statsRow, anim2]}>
         <StatCard
           value={totalItems}
-          label="Total Items"
-          onPress={() => navigation.navigate('Kitchen')}
+          label="Total items"
+          onPress={() => {
+            hapticLight();
+            if (showLocationBreakdown) {
+              setShowLocationBreakdown(false);
+            } else {
+              setShowLocationBreakdown(true);
+              setShowExpiring(false);
+              setShowPerfectRecipes(false);
+            }
+          }}
         />
         <StatCard
           value={expiring.length}
-          label="Expiring Soon"
+          label={`expiring in ${expiryThreshold} day${expiryThreshold === 1 ? '' : 's'}`}
           accent={expiring.length > 0 ? COLORS.danger : COLORS.text}
-          onPress={() => navigation.navigate('Kitchen')}
+          onPress={() => { hapticLight(); setShowExpiring(true); setShowLocationBreakdown(false); setShowPerfectRecipes(false); }}
+          onLongPress={() => { setDaysInput(String(expiryThreshold)); setShowDaysPopup(true); }}
         />
         <StatCard
-          value={fridgeCount}
-          label="In Fridge"
-          onPress={() => navigation.navigate('Kitchen')}
-        />
-        <StatCard
-          value={mealsCount}
-          label="Meals Planned"
-          onPress={() => navigation.navigate('MealPlan')}
+          value={perfectRecipes.length}
+          label="Perfect recipes"
+          accent={perfectRecipes.length > 0 ? COLORS.success : COLORS.text}
+          onPress={() => {
+            hapticLight();
+            if (showPerfectRecipes) {
+              setShowPerfectRecipes(false);
+            } else {
+              setShowPerfectRecipes(true);
+              setShowLocationBreakdown(false);
+              setShowExpiring(false);
+            }
+          }}
         />
       </Animated.View>
 
-      {/* Expiring Alert */}
-      {expiring.length > 0 && (
-        <Animated.View style={[styles.alertBanner, anim3]}>
-          <View style={styles.alertDot} />
-          <Text style={styles.alertText}>
-            {expiring.length} item{expiring.length > 1 ? 's' : ''} expiring soon
-          </Text>
-          <TouchableOpacity onPress={() => { hapticLight(); navigation.navigate('Recipes'); }}>
-            <Text style={styles.alertAction}>Use in Recipes ›</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
-
-      {/* Expiring Soon */}
-      {expiring.length > 0 && (
-        <Animated.View style={anim3}>
-          <SectionTitle>Expiring Soon</SectionTitle>
-          <GroupedCard>
-            {expiring.map((item, i) => (
-              <React.Fragment key={item.id}>
+      {/* Total Items / Expiring / Default */}
+      <Animated.View style={anim3}>
+        {showLocationBreakdown ? (
+          <>
+            <SectionTitle>Total Items</SectionTitle>
+            <ScrollableTable
+              key="location"
+              buttonDismissed={locationBtnDismissed}
+              onButtonDismiss={() => setLocationBtnDismissed(true)}
+              scrollY={locationScrollY}
+              rows={[{ label: 'Fridge', emoji: '🧊' }, { label: 'Freezer', emoji: '❄️' }, { label: 'Pantry', emoji: '🗄️' }]}
+              renderRow={({ label, emoji }) => (
+                <View style={styles.expiringRow}>
+                  <Text style={styles.expiringEmoji}>{emoji}</Text>
+                  <Text style={[styles.expiringName, { flex: 1 }]}>{label}</Text>
+                  <Text style={[styles.expiringName, { color: COLORS.textMuted }]}>{locationCounts[label]}</Text>
+                </View>
+              )}
+              dividerLeft={52}
+            />
+          </>
+        ) : showExpiring ? (
+          <>
+            <SectionTitle>Expiring in {expiryThreshold} day{expiryThreshold === 1 ? '' : 's'}</SectionTitle>
+            <ScrollableTable
+              key="expiring"
+              buttonDismissed={expiringBtnDismissed}
+              onButtonDismiss={() => setExpiringBtnDismissed(true)}
+              scrollY={expiringScrollY}
+              rows={expiring}
+              renderRow={(item) => (
                 <View style={styles.expiringRow}>
                   <Text style={styles.expiringEmoji}>{item.emoji}</Text>
                   <View style={{ flex: 1 }}>
@@ -277,12 +412,46 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
                   </View>
                   <ExpiryBadge days={item.expiryDays} />
                 </View>
-                {i < expiring.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))}
-          </GroupedCard>
-        </Animated.View>
-      )}
+              )}
+              dividerLeft={52}
+            />
+          </>
+        ) : showPerfectRecipes ? (
+          <>
+            <SectionTitle>Perfect Recipes</SectionTitle>
+            {perfectRecipes.length === 0 ? (
+              <GroupedCard>
+                <Text style={styles.emptyText}>No recipes match your current inventory</Text>
+              </GroupedCard>
+            ) : (
+              <ScrollableTable
+                key="perfect"
+                buttonDismissed={perfectBtnDismissed}
+                onButtonDismiss={() => setPerfectBtnDismissed(true)}
+                scrollY={perfectScrollY}
+                rows={perfectRecipes}
+                renderRow={(recipe) => (
+                  <View style={styles.expiringRow}>
+                    <Text style={styles.expiringEmoji}>{recipe.emoji}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.expiringName}>{recipe.name}</Text>
+                      <Text style={styles.expiringQty}>{recipe.time} · {recipe.difficulty}</Text>
+                    </View>
+                    {recipe.expiringCount > 0 && (
+                      <View style={{ backgroundColor: COLORS.dangerLight, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
+                        <Text style={{ fontSize: 11, fontFamily: FONTS.bodyBold, color: COLORS.danger }}>
+                          {recipe.expiringCount} expiring
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+                dividerLeft={52}
+              />
+            )}
+          </>
+        ) : null}
+      </Animated.View>
 
       {/* Recent Activity */}
       <Animated.View style={[{ gap: 12 }, anim4]}>
@@ -332,5 +501,85 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
       </Animated.View>
 
     </ScrollView>
+
+    {/* Days threshold popup */}
+    <Modal visible={showDaysPopup} transparent animationType="fade" onRequestClose={() => { setShowDaysPopup(false); setDaysError(''); }}>
+      <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setShowDaysPopup(false); setDaysError(''); }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              <View style={{
+                backgroundColor: COLORS.card,
+                borderRadius: RADIUS.xxl,
+                padding: 24,
+                width: 280,
+                gap: 16,
+              }}>
+                <Text style={{ fontSize: 17, fontFamily: FONTS.bodyBold, color: COLORS.text }}>
+                  Set Expiry Window
+                </Text>
+                <Text style={{ fontSize: 14, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+                  Show items expiring within how many days?
+                </Text>
+                <TextInput
+                  value={daysInput}
+                  onChangeText={(t) => { setDaysInput(t); setDaysError(''); }}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  autoFocus
+                  style={{
+                    backgroundColor: COLORS.bg,
+                    borderRadius: RADIUS.lg,
+                    padding: 14,
+                    fontSize: 24,
+                    fontFamily: FONTS.display,
+                    color: COLORS.text,
+                    textAlign: 'center',
+                    borderWidth: daysError ? 1.5 : 0,
+                    borderColor: COLORS.danger,
+                  }}
+                />
+                {!!daysError && (
+                  <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: COLORS.danger, textAlign: 'center', marginTop: -8 }}>
+                    {daysError}
+                  </Text>
+                )}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                    onPress={() => { setShowDaysPopup(false); setDaysError(''); }}
+                    style={{ flex: 1, padding: 14, borderRadius: RADIUS.lg, backgroundColor: COLORS.bg, alignItems: 'center' }}
+                  >
+                    <Text style={{ fontFamily: FONTS.bodyMed, color: COLORS.textMuted }}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const n = parseInt(daysInput, 10);
+                      if (!daysInput || isNaN(n)) {
+                        setDaysError('Please enter a number between 1 and 30.');
+                        return;
+                      }
+                      if (n < 1 || n > 30) {
+                        setDaysError('Please set a value between 1 and 30.');
+                        return;
+                      }
+                      setExpiryThreshold(n);
+                      setShowExpiring(true);
+                      setShowLocationBreakdown(false);
+                      setShowPerfectRecipes(false);
+                      setDaysError('');
+                      setShowDaysPopup(false);
+                    }}
+                    style={{ flex: 1, padding: 14, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, alignItems: 'center' }}
+                  >
+                    <Text style={{ fontFamily: FONTS.bodyMed, color: '#fff' }}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+    </>
   );
 }
