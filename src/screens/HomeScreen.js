@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { FONTS, RADIUS } from '../theme';
-import { MOCK_RECIPES } from '../data';
+import { MOCK_RECIPES, INITIAL_HEALTH_DATA } from '../data';
 import { useTheme } from '../context/ThemeContext';
 import { Animated, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
@@ -71,16 +71,26 @@ function ScrollableTable({ rows, renderRow, dividerLeft = 0, buttonDismissed, on
   const scrollRef = useRef(null);
   const extra = rows.length - 3;
   const [showButton, setShowButton] = useState(extra > 0 && !buttonDismissed);
+  const needsRestore = scrollY && scrollY.current > 0;
+  const [restored, setRestored] = useState(!needsRestore);
 
   return (
     <GroupedCard>
-      <View style={{ position: 'relative' }}>
+      <View style={{ position: 'relative', opacity: restored ? 1 : 0 }}>
         <ScrollView
           ref={scrollRef}
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ maxHeight: 67 * 3 }}
-          contentOffset={scrollY ? { x: 0, y: scrollY.current } : undefined}
+          contentOffset={needsRestore ? { x: 0, y: scrollY.current } : undefined}
+          onContentSizeChange={() => {
+            if (!restored) {
+              if (needsRestore) {
+                scrollRef.current?.scrollTo({ x: 0, y: scrollY.current, animated: false });
+              }
+              setRestored(true);
+            }
+          }}
           onScroll={(e) => {
             const y = e.nativeEvent.contentOffset.y;
             if (scrollY) scrollY.current = y;
@@ -210,19 +220,6 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
     expiringName: { fontSize: 15, fontFamily: FONTS.bodyMed, color: COLORS.text },
     expiringQty: { fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted, marginTop: 2 },
     divider: { height: StyleSheet.hairlineWidth, backgroundColor: COLORS.border, marginLeft: 52 },
-    activityRow: { flexDirection: 'row', alignItems: 'center', padding: 14 },
-    activityText: { fontSize: 14, fontFamily: FONTS.bodyMed, color: COLORS.text },
-    activityTime: { fontSize: 12, fontFamily: FONTS.body, color: COLORS.textDim, marginTop: 2 },
-    dayPill: {
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderRadius: RADIUS.full,
-      backgroundColor: COLORS.card,
-      marginRight: 8,
-    },
-    dayPillActive: { backgroundColor: COLORS.primary },
-    dayPillText: { fontSize: 13, fontFamily: FONTS.bodyMed, color: COLORS.textMuted },
-    dayPillTextActive: { color: '#fff' },
     emptyText: {
       fontSize: 14,
       fontFamily: FONTS.body,
@@ -238,7 +235,6 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
   const anim3 = useStaggeredItem(3);
   const anim4 = useStaggeredItem(4);
 
-  const [selectedDate, setSelectedDate] = useState(null); // null = All
   const [showLocationBreakdown, setShowLocationBreakdown] = useState(false);
   const [showExpiring, setShowExpiring] = useState(true);
   const [showPerfectRecipes, setShowPerfectRecipes] = useState(false);
@@ -253,30 +249,15 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
   const expiringScrollY = useRef(0);
   const perfectScrollY = useRef(0);
 
-  // Last 30 days
-  const days = useMemo(() => {
-    const result = [];
-    for (let i = 0; i < 30; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      result.push(d.toISOString().split('T')[0]);
-    }
-    return result;
-  }, []);
+  const health = INITIAL_HEALTH_DATA;
+  const [calorieGoal, setCalorieGoal] = useState(health.dailyCalorieGoal);
+  const [showGoalPopup, setShowGoalPopup] = useState(false);
+  const [goalInput, setGoalInput] = useState(String(health.dailyCalorieGoal));
+  const [goalError, setGoalError] = useState('');
 
-  const filteredActivity = useMemo(() => {
-    if (!selectedDate) return activityFeed;
-    return activityFeed.filter((a) => a.date === selectedDate);
-  }, [activityFeed, selectedDate]);
+  const caloriePct = Math.min((health.today.calories / calorieGoal) * 100, 100);
+  const maxWeeklyCal = Math.max(...health.weekly.map((w) => w.calories), calorieGoal);
 
-  function dayLabel(dateStr) {
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    if (dateStr === today) return 'Today';
-    if (dateStr === yesterday) return 'Yesterday';
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en', { weekday: 'short', day: 'numeric' });
-  }
 
   const expiring = fridgeItems.filter((i) => i.expiryDays <= expiryThreshold).sort((a, b) => a.expiryDays - b.expiryDays);
   const totalItems = fridgeItems.length;
@@ -340,13 +321,9 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
           label="Total items"
           onPress={() => {
             hapticLight();
-            if (showLocationBreakdown) {
-              setShowLocationBreakdown(false);
-            } else {
-              setShowLocationBreakdown(true);
-              setShowExpiring(false);
-              setShowPerfectRecipes(false);
-            }
+            setShowLocationBreakdown(true);
+            setShowExpiring(false);
+            setShowPerfectRecipes(false);
           }}
         />
         <StatCard
@@ -362,13 +339,9 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
           accent={perfectRecipes.length > 0 ? COLORS.success : COLORS.text}
           onPress={() => {
             hapticLight();
-            if (showPerfectRecipes) {
-              setShowPerfectRecipes(false);
-            } else {
-              setShowPerfectRecipes(true);
-              setShowLocationBreakdown(false);
-              setShowExpiring(false);
-            }
+            setShowPerfectRecipes(true);
+            setShowLocationBreakdown(false);
+            setShowExpiring(false);
           }}
         />
       </Animated.View>
@@ -453,54 +426,178 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
         ) : null}
       </Animated.View>
 
-      {/* Recent Activity */}
+      {/* Nutrition Dashboard */}
       <Animated.View style={[{ gap: 12 }, anim4]}>
-        <SectionTitle>Recent Activity</SectionTitle>
+        <SectionTitle>Nutrition</SectionTitle>
 
-        {/* Day filter strip */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24 }}>
-          <View style={{ flexDirection: 'row', paddingHorizontal: 24 }}>
-            <TouchableOpacity
-              style={[styles.dayPill, !selectedDate && styles.dayPillActive]}
-              onPress={() => { hapticLight(); setSelectedDate(null); }}
-            >
-              <Text style={[styles.dayPillText, !selectedDate && styles.dayPillTextActive]}>All</Text>
-            </TouchableOpacity>
-            {days.map((d) => (
-              <TouchableOpacity
-                key={d}
-                style={[styles.dayPill, selectedDate === d && styles.dayPillActive]}
-                onPress={() => { hapticLight(); setSelectedDate(d); }}
-              >
-                <Text style={[styles.dayPillText, selectedDate === d && styles.dayPillTextActive]}>
-                  {dayLabel(d)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        {/* Calorie card - full width, long press to set goal */}
+        <TouchableOpacity
+          onLongPress={() => { hapticMedium(); setGoalInput(String(calorieGoal)); setShowGoalPopup(true); }}
+          activeOpacity={0.9}
+          style={{ backgroundColor: COLORS.card, borderRadius: RADIUS.xl, padding: 16, gap: 10 }}
+        >
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+              <Text style={{ fontSize: 32, fontFamily: FONTS.display, color: COLORS.text, lineHeight: 36 }}>
+                {health.today.calories.toLocaleString()}
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+                / {calorieGoal.toLocaleString()} kcal
+              </Text>
+            </View>
+            <Text style={{ fontSize: 10, fontFamily: FONTS.body, color: COLORS.textMuted, marginTop: 6 }}>
+              hold to set goal
+            </Text>
           </View>
-        </ScrollView>
+          <View style={{ height: 6, backgroundColor: COLORS.cardAlt, borderRadius: 3, overflow: 'hidden' }}>
+            <View style={{
+              width: `${caloriePct}%`,
+              height: '100%',
+              backgroundColor: caloriePct >= 90 ? COLORS.warning : COLORS.primary,
+              borderRadius: 3,
+            }} />
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: COLORS.primary }}>
+                {Math.round(caloriePct)}%
+              </Text>
+              <Text style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted }}>of daily goal</Text>
+            </View>
+            <Text style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+              {Math.max(0, calorieGoal - health.today.calories).toLocaleString()} kcal remaining
+            </Text>
+          </View>
+        </TouchableOpacity>
 
-        <GroupedCard>
-          {filteredActivity.length === 0 ? (
-            <Text style={styles.emptyText}>No activity on this day</Text>
-          ) : (
-            filteredActivity.map((a, i) => (
-              <React.Fragment key={a.id}>
-                <View style={styles.activityRow}>
-                  <Text style={{ fontSize: 18, marginRight: 12 }}>{a.icon}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.activityText}>{a.text}</Text>
-                    <Text style={styles.activityTime}>{a.time}</Text>
-                  </View>
+        {/* Weekly Trend */}
+        <View style={{ backgroundColor: COLORS.card, borderRadius: RADIUS.xl, padding: 16, gap: 12 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ fontSize: 14, fontFamily: FONTS.bodyBold, color: COLORS.text }}>This week</Text>
+            <Text style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+              avg {Math.round(health.weekly.reduce((s, w) => s + w.calories, 0) / health.weekly.length).toLocaleString()} kcal
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 80 }}>
+            {health.weekly.map((w, i) => {
+              const barH = (w.calories / maxWeeklyCal) * 70;
+              const isToday = i === health.weekly.length - 1;
+              const overGoal = w.calories > calorieGoal;
+              return (
+                <View key={w.day} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+                  <Text style={{ fontSize: 9, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+                    {w.calories >= 1000 ? `${(w.calories / 1000).toFixed(1)}k` : w.calories}
+                  </Text>
+                  <View style={{
+                    width: '100%',
+                    height: barH,
+                    borderRadius: 4,
+                    backgroundColor: isToday ? COLORS.primary : overGoal ? COLORS.warning + '80' : COLORS.primary + '40',
+                  }} />
+                  <Text style={{
+                    fontSize: 11,
+                    fontFamily: isToday ? FONTS.bodyBold : FONTS.body,
+                    color: isToday ? COLORS.primary : COLORS.textMuted,
+                  }}>
+                    {w.day}
+                  </Text>
                 </View>
-                {i < filteredActivity.length - 1 && <View style={styles.divider} />}
-              </React.Fragment>
-            ))
-          )}
+              );
+            })}
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <View style={{ width: 12, height: 2, backgroundColor: COLORS.textMuted, borderRadius: 1 }} />
+            <Text style={{ fontSize: 10, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+              {calorieGoal.toLocaleString()} kcal goal
+            </Text>
+          </View>
+        </View>
+
+        {/* Today's Meals */}
+        <SectionTitle>Today's meals</SectionTitle>
+        <GroupedCard>
+          {health.today.meals.map((meal, i) => (
+            <React.Fragment key={meal.id}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 14 }}>
+                <Text style={{ fontSize: 22, marginRight: 12 }}>{meal.emoji}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontFamily: FONTS.bodyMed, color: COLORS.text }}>{meal.name}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted, marginTop: 2 }}>{meal.time}</Text>
+                </View>
+                <Text style={{ fontSize: 14, fontFamily: FONTS.bodyBold, color: COLORS.text }}>{meal.calories}</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONTS.body, color: COLORS.textMuted, marginLeft: 2 }}>kcal</Text>
+              </View>
+              {i < health.today.meals.length - 1 && (
+                <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: COLORS.border, marginLeft: 48 }} />
+              )}
+            </React.Fragment>
+          ))}
         </GroupedCard>
       </Animated.View>
 
     </ScrollView>
+
+    {/* Calorie goal popup */}
+    <Modal visible={showGoalPopup} transparent animationType="fade" onRequestClose={() => { setShowGoalPopup(false); setGoalError(''); }}>
+      <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setShowGoalPopup(false); setGoalError(''); }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              <View style={{ backgroundColor: COLORS.card, borderRadius: RADIUS.xxl, padding: 24, width: 280, gap: 16 }}>
+                <Text style={{ fontSize: 17, fontFamily: FONTS.bodyBold, color: COLORS.text }}>Daily Calorie Goal</Text>
+                <Text style={{ fontSize: 14, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+                  Set your target calories for the day.
+                </Text>
+                <TextInput
+                  value={goalInput}
+                  onChangeText={(t) => { setGoalInput(t); setGoalError(''); }}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                  autoFocus
+                  style={{
+                    backgroundColor: COLORS.bg,
+                    borderRadius: RADIUS.lg,
+                    padding: 14,
+                    fontSize: 24,
+                    fontFamily: FONTS.display,
+                    color: COLORS.text,
+                    textAlign: 'center',
+                    borderWidth: goalError ? 1.5 : 0,
+                    borderColor: COLORS.danger,
+                  }}
+                />
+                {!!goalError && (
+                  <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: COLORS.danger, textAlign: 'center', marginTop: -8 }}>
+                    {goalError}
+                  </Text>
+                )}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                    onPress={() => { setShowGoalPopup(false); setGoalError(''); }}
+                    style={{ flex: 1, padding: 14, borderRadius: RADIUS.lg, backgroundColor: COLORS.bg, alignItems: 'center' }}
+                  >
+                    <Text style={{ fontFamily: FONTS.bodyMed, color: COLORS.textMuted }}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const n = parseInt(goalInput, 10);
+                      if (!goalInput || isNaN(n)) { setGoalError('Please enter a number.'); return; }
+                      if (n < 500 || n > 9999) { setGoalError('Enter a value between 500 and 9999.'); return; }
+                      setCalorieGoal(n);
+                      setGoalError('');
+                      setShowGoalPopup(false);
+                    }}
+                    style={{ flex: 1, padding: 14, borderRadius: RADIUS.lg, backgroundColor: COLORS.primary, alignItems: 'center' }}
+                  >
+                    <Text style={{ fontFamily: FONTS.bodyMed, color: '#fff' }}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
 
     {/* Days threshold popup */}
     <Modal visible={showDaysPopup} transparent animationType="fade" onRequestClose={() => { setShowDaysPopup(false); setDaysError(''); }}>
