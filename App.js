@@ -38,7 +38,7 @@ function AppInner() {
 
   const addActivity = useCallback((text, icon) => {
     setActivityFeed((prev) => [
-      { id: 'a' + Date.now(), text, time: 'Just now', icon },
+      { id: 'a' + Date.now(), text, time: 'Just now', icon, date: new Date().toISOString().split('T')[0] },
       ...prev.slice(0, 9),
     ]);
   }, []);

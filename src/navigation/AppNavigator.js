@@ -42,27 +42,31 @@ const TAB_ICONS = {
   Shopping: { icon: 'cart',               label: 'Shopping' },
 };
 
-const makeStyles = (COLORS) => StyleSheet.create({
+const makeStyles = (COLORS, isDark) => StyleSheet.create({
   tabBarOuter: {
     position: 'absolute',
-    bottom: 16,
+    bottom: 28,
     left: 12,
     right: 12,
     borderRadius: 40,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: isDark ? 0 : 8 },
+    shadowOpacity: isDark ? 0 : 0.18,
+    shadowRadius: isDark ? 0 : 24,
+    elevation: isDark ? 0 : 10,
   },
   tabBarBlur: {
     borderRadius: 40,
     overflow: 'hidden',
-    borderWidth: 0.5,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: isDark ? 0.5 : 0,
+    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'transparent',
   },
   tabBarInner: {
     flexDirection: 'row',
-    paddingTop: 5,
-    paddingBottom: Platform.OS === 'ios' ? 14 : 5,
+    paddingVertical: 8,
     paddingHorizontal: 4,
-    backgroundColor: COLORS.bg + '26',
+    backgroundColor: isDark ? COLORS.bg + '26' : 'rgba(255,255,255,0.4)',
     position: 'relative',
   },
   bubble: {
@@ -101,12 +105,13 @@ const makeStyles = (COLORS) => StyleSheet.create({
   tabItem: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 2,
   },
   tabIconWrap: {
-    width: 36,
-    height: 28,
-    borderRadius: 14,
+    width: 28,
+    height: 26,
+    borderRadius: 13,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -119,7 +124,7 @@ const makeStyles = (COLORS) => StyleSheet.create({
 // Per-platform glass fill for the bubble
 function LiquidGlassBubble() {
   const { colors: COLORS, isDark } = useTheme();
-  const styles = makeStyles(COLORS);
+  const styles = makeStyles(COLORS, isDark);
 
   // iOS 26+ — true native Liquid Glass
   if (glassSupported && GlassView) {
@@ -168,7 +173,7 @@ function LiquidGlassBubble() {
 // Per-platform glass background for the tab bar itself
 function GlassBar({ children, style, ...props }) {
   const { colors: COLORS, isDark } = useTheme();
-  const styles = makeStyles(COLORS);
+  const styles = makeStyles(COLORS, isDark);
 
   if (Platform.OS === 'web') {
     return (
@@ -179,15 +184,15 @@ function GlassBar({ children, style, ...props }) {
   }
   const blurTint = isDark ? 'dark' : 'light';
   return (
-    <BlurView intensity={30} tint={blurTint} style={style} {...props}>
+    <BlurView intensity={isDark ? 30 : 60} tint={blurTint} style={style} {...props}>
       {children}
     </BlurView>
   );
 }
 
 function TabItemAnimated({ icon, label, focused }) {
-  const { colors: COLORS } = useTheme();
-  const styles = makeStyles(COLORS);
+  const { colors: COLORS, isDark } = useTheme();
+  const styles = makeStyles(COLORS, isDark);
 
   const scale = useRef(new Animated.Value(focused ? 1.3 : 1)).current;
 
@@ -216,8 +221,8 @@ function TabItemAnimated({ icon, label, focused }) {
 }
 
 function GlassTabBar({ state, descriptors, navigation }) {
-  const { colors: COLORS } = useTheme();
-  const styles = makeStyles(COLORS);
+  const { colors: COLORS, isDark } = useTheme();
+  const styles = makeStyles(COLORS, isDark);
 
   const [innerHeight, setInnerHeight] = React.useState(0);
   const count = state.routes.length;
@@ -226,6 +231,7 @@ function GlassTabBar({ state, descriptors, navigation }) {
   // Use refs so PanResponder always reads fresh values
   const tabWidthRef = useRef(0);
   const currentIndexRef = useRef(state.index);
+  const bubbleStartXRef = useRef(0);
   React.useEffect(() => { currentIndexRef.current = state.index; }, [state.index]);
 
   const bubblePixelX = useRef(new Animated.Value(0)).current;
@@ -261,15 +267,21 @@ function GlassTabBar({ state, descriptors, navigation }) {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
+      onPanResponderGrant: (e, g) => {
         bubblePixelX.stopAnimation();
         bubbleScaleX.stopAnimation();
+        const tw = tabWidthRef.current;
+        if (!tw) return;
+        // Snap bubble to the tab the finger is touching, then drag from there
+        const touchedIndex = Math.max(0, Math.min(Math.floor(g.x0 / tw), count - 1));
+        const snapX = touchedIndex * tw;
+        bubblePixelX.setValue(snapX);
+        bubbleStartXRef.current = snapX;
       },
       onPanResponderMove: (_, g) => {
         const tw = tabWidthRef.current;
         if (!tw) return;
-        const baseX = currentIndexRef.current * tw;
-        const newX = Math.max(0, Math.min(baseX + g.dx, (count - 1) * tw));
+        const newX = Math.max(0, Math.min(bubbleStartXRef.current + g.dx, (count - 1) * tw));
         bubblePixelX.setValue(newX);
         bubbleScaleX.setValue(1 + Math.min(Math.abs(g.dx) / (tw * 2), 0.4));
       },
@@ -277,12 +289,12 @@ function GlassTabBar({ state, descriptors, navigation }) {
         const tw = tabWidthRef.current;
         if (!tw) return;
         if (Math.abs(g.dx) < 8) {
-          // Tap — determine which tab was touched by x position
+          // Tap — navigate to the tab that was touched
           const tappedIndex = Math.max(0, Math.min(Math.floor(g.x0 / tw), count - 1));
           navigation.navigate(state.routes[tappedIndex].name);
         } else {
-          // Drag — snap to nearest
-          const movedX = currentIndexRef.current * tw + g.dx;
+          // Drag — snap to nearest from drag end position
+          const movedX = bubbleStartXRef.current + g.dx;
           const nearest = Math.round(Math.max(0, Math.min(movedX / tw, count - 1)));
           navigation.navigate(state.routes[nearest].name);
         }
@@ -290,7 +302,7 @@ function GlassTabBar({ state, descriptors, navigation }) {
     })
   ).current;
 
-  const bubbleTop = innerHeight > 0 ? (innerHeight - BUBBLE_SIZE) / 2 - (Platform.OS === 'ios' ? 8 : 0) : 4;
+  const bubbleTop = innerHeight > 0 ? (innerHeight - BUBBLE_SIZE) / 2 : 4;
 
   return (
     <View style={styles.tabBarOuter} pointerEvents="box-none">
@@ -339,8 +351,8 @@ function GlassTabBar({ state, descriptors, navigation }) {
 }
 
 function TabIcon({ name, focused, badge }) {
-  const { colors: COLORS } = useTheme();
-  const styles = makeStyles(COLORS);
+  const { colors: COLORS, isDark } = useTheme();
+  const styles = makeStyles(COLORS, isDark);
 
   const scale = useRef(new Animated.Value(1)).current;
 

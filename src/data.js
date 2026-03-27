@@ -77,10 +77,10 @@ export const INITIAL_MEAL_PLAN = {
 };
 
 export const INITIAL_ACTIVITY = [
-  { id: 'a1', text: 'Added 6 items from Woolworths receipt', time: '2 hours ago', icon: '🧾' },
-  { id: 'a2', text: 'Cooked Chicken Stir Fry', time: '1 day ago', icon: '👨‍🍳' },
-  { id: 'a3', text: 'Added Tomatoes to shopping list', time: '1 day ago', icon: '🛒' },
-  { id: 'a4', text: 'Generated 3 recipes from kitchen', time: '2 days ago', icon: '✨' },
+  { id: 'a1', text: 'Added 6 items from Woolworths receipt', time: '2 hours ago', icon: '🧾', date: dateKey(0) },
+  { id: 'a2', text: 'Cooked Chicken Stir Fry', time: '1 day ago', icon: '👨‍🍳', date: dateKey(-1) },
+  { id: 'a3', text: 'Added Tomatoes to shopping list', time: '1 day ago', icon: '🛒', date: dateKey(-1) },
+  { id: 'a4', text: 'Generated 3 recipes from kitchen', time: '2 days ago', icon: '✨', date: dateKey(-2) },
 ];
 
 export const MOCK_RECIPES = [
