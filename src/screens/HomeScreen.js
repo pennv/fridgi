@@ -82,6 +82,28 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
   const calorieRemaining = Math.max(0, calorieGoal - todayCalories);
   const chartScrollRef = useRef(null);
 
+  // Sticky tabs
+  const tabsLayoutY = useRef(0);
+  const tabsLayoutH = useRef(0);
+  const isStickyRef = useRef(false);
+  const [isSticky, setIsSticky] = useState(false);
+  const stickyAnim = useRef(new Animated.Value(0)).current;
+
+  const handleScroll = (e) => {
+    const y = e.nativeEvent.contentOffset.y;
+    const shouldStick = y >= tabsLayoutY.current + tabsLayoutH.current - 50;
+    if (shouldStick !== isStickyRef.current) {
+      isStickyRef.current = shouldStick;
+      setIsSticky(shouldStick);
+      Animated.spring(stickyAnim, {
+        toValue: shouldStick ? 1 : 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 300,
+      }).start();
+    }
+  };
+
   const displayCalories = selectedDayIndex === null ? todayCalories : reversedDaily[selectedDayIndex].calories;
   const displayPct = (displayCalories / calorieGoal) * 100;
   const displayRemaining = calorieGoal - displayCalories;
@@ -119,7 +141,7 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
 
   return (
     <>
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={handleScroll} scrollEventThrottle={16}>
 
       {/* Header */}
       <Animated.View style={[styles.headerRow, anim0]}>
@@ -213,26 +235,29 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
       </Animated.View>
 
       {/* Stats — tab selector */}
-      <Animated.View style={[styles.statsRow, anim2]}>
+      <Animated.View style={[styles.statsRow, anim2]} onLayout={(e) => { tabsLayoutY.current = e.nativeEvent.layout.y; tabsLayoutH.current = e.nativeEvent.layout.height; }}>
         {[
           { id: 'location', value: totalItems, label: 'Total items', accent: null },
           { id: 'meal', value: mealRecommendations.length, label: "Today's meal", accent: mealRecommendations.length > 0 ? COLORS.success : null },
           { id: 'expiring', value: expiring.length, label: `${expiryThreshold}d expiring`, accent: expiring.length > 0 ? COLORS.danger : null },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
+          const activeColor = tab.accent || COLORS.primary;
           return (
             <TouchableOpacity
               key={tab.id}
               style={{
-                flex: 1, backgroundColor: isActive ? COLORS.primary : COLORS.card,
+                flex: 1, backgroundColor: COLORS.card,
                 borderRadius: RADIUS.xl, padding: 16, gap: 4,
+                borderWidth: 2,
+                borderColor: isActive ? activeColor : 'transparent',
               }}
               onPress={() => { hapticLight(); setActiveTab(tab.id); }}
               onLongPress={tab.id === 'expiring' ? () => { hapticMedium(); setDaysInput(String(expiryThreshold)); setShowDaysPopup(true); } : undefined}
               activeOpacity={0.85}
             >
-              <Text style={{ fontSize: 32, fontFamily: FONTS.display, color: isActive ? '#fff' : (tab.accent || COLORS.text), lineHeight: 36 }}>{tab.value}</Text>
-              <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: isActive ? 'rgba(255,255,255,0.65)' : COLORS.textMuted }}>{tab.label}</Text>
+              <Text style={{ fontSize: 32, fontFamily: FONTS.display, color: isActive ? (tab.accent || COLORS.text) : (tab.accent ? tab.accent + '99' : COLORS.textMuted), lineHeight: 36 }}>{tab.value}</Text>
+              <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: isActive ? COLORS.text : COLORS.textMuted }}>{tab.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -309,6 +334,54 @@ export default function HomeScreen({ navigation, fridgeItems, mealPlan, activity
       </Animated.View>
 
     </ScrollView>
+
+    {/* Sticky compact tabs */}
+    <Animated.View
+      pointerEvents={isSticky ? 'auto' : 'none'}
+      style={{
+        position: 'absolute', top: 0, left: 0, right: 0,
+        paddingTop: 54, paddingHorizontal: 20, paddingBottom: 12,
+        backgroundColor: COLORS.bg,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: COLORS.border,
+        opacity: stickyAnim,
+        transform: [{ translateY: stickyAnim.interpolate({ inputRange: [0, 1], outputRange: [-12, 0] }) }],
+      }}
+    >
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        {[
+          { id: 'location', value: totalItems, label: 'Total', accent: null },
+          { id: 'meal', value: mealRecommendations.length, label: 'Meal', accent: mealRecommendations.length > 0 ? COLORS.success : null },
+          { id: 'expiring', value: expiring.length, label: `${expiryThreshold}d exp`, accent: expiring.length > 0 ? COLORS.danger : null },
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          const activeColor = tab.accent || COLORS.primary;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              onPress={() => { hapticLight(); setActiveTab(tab.id); }}
+              onLongPress={tab.id === 'expiring' ? () => { hapticMedium(); setDaysInput(String(expiryThreshold)); setShowDaysPopup(true); } : undefined}
+              activeOpacity={0.75}
+              style={{
+                flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+                backgroundColor: COLORS.card,
+                borderRadius: RADIUS.full,
+                paddingVertical: 8, paddingHorizontal: 12,
+                borderWidth: 1.5,
+                borderColor: isActive ? activeColor : 'transparent',
+              }}
+            >
+              <Text style={{ fontSize: 14, fontFamily: FONTS.bodyBold, color: isActive ? activeColor : COLORS.textMuted }}>
+                {tab.value}
+              </Text>
+              <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: isActive ? COLORS.text : COLORS.textMuted }}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </Animated.View>
 
     {/* Calorie edit popup */}
     <Modal visible={showCaloriePopup} transparent animationType="fade" onRequestClose={() => { setShowCaloriePopup(false); setCalorieError(''); }}>
