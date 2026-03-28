@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform, PanResponder, Modal } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -44,6 +45,7 @@ const TAB_ICONS = {
 
 const BUBBLE_W = 50;
 const BUBBLE_H = 50;
+const FAB_INDEX = 2; // center tab index
 
 const makeStyles = (COLORS, isDark) => StyleSheet.create({
   tabBarOuter: {
@@ -223,6 +225,7 @@ function GlassTabBar({ state, descriptors, navigation }) {
   const styles = makeStyles(COLORS, isDark);
 
   const [innerHeight, setInnerHeight] = React.useState(0);
+  const [fabOpen, setFabOpen] = React.useState(false);
   const count = state.routes.length;
 
   // Use refs so PanResponder always reads fresh values
@@ -283,14 +286,21 @@ function GlassTabBar({ state, descriptors, navigation }) {
         const tw = tabWidthRef.current;
         if (!tw) return;
         if (Math.abs(g.dx) < 8) {
-          // Tap — navigate to the tab that was touched
+          // Tap
           const tappedIndex = Math.max(0, Math.min(Math.floor((g.x0 - 6) / tw), count - 1));
-          navigation.navigate(state.routes[tappedIndex].name);
+          if (tappedIndex === FAB_INDEX) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setFabOpen(true);
+          } else {
+            navigation.navigate(state.routes[tappedIndex].name);
+          }
         } else {
-          // Drag — snap to nearest from drag end position
+          // Drag — snap to nearest, skip FAB position
           const movedX = bubbleStartXRef.current + g.dx;
           const nearest = Math.round(Math.max(0, Math.min(movedX / tw, count - 1)));
-          navigation.navigate(state.routes[nearest].name);
+          if (nearest !== FAB_INDEX) {
+            navigation.navigate(state.routes[nearest].name);
+          }
         }
       },
     })
@@ -332,6 +342,24 @@ function GlassTabBar({ state, descriptors, navigation }) {
           )}
 
           {state.routes.map((route, index) => {
+            if (index === FAB_INDEX) {
+              return (
+                <View key={route.key} style={styles.tabItem} pointerEvents="none">
+                  <View style={{
+                    width: 50, height: 50, borderRadius: 25,
+                    backgroundColor: '#34C759',
+                    justifyContent: 'center', alignItems: 'center',
+                    shadowColor: '#34C759',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 8,
+                    elevation: 6,
+                  }}>
+                    <Ionicons name="add" size={28} color="#fff" />
+                  </View>
+                </View>
+              );
+            }
             const focused = state.index === index;
             const label = TAB_ICONS[route.name]?.label ?? route.name;
             const icon = TAB_ICONS[route.name]?.icon ?? 'circle';
@@ -341,6 +369,84 @@ function GlassTabBar({ state, descriptors, navigation }) {
           })}
         </View>
       </GlassBar>
+
+      {/* Action Sheet Modal */}
+      <Modal
+        visible={fabOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFabOpen(false)}
+        statusBarTranslucent
+      >
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' }}
+            onPress={() => setFabOpen(false)}
+            activeOpacity={1}
+          />
+          <View style={{
+            backgroundColor: COLORS.card,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            paddingHorizontal: 20,
+            paddingTop: 12,
+            paddingBottom: 40,
+          }}>
+            {/* Handle bar */}
+            <View style={{
+              width: 36, height: 4, borderRadius: 2,
+              backgroundColor: COLORS.border,
+              alignSelf: 'center', marginBottom: 20,
+            }} />
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 18, color: COLORS.text, marginBottom: 16 }}>
+              Add to Kitchen
+            </Text>
+            {[
+              { icon: '📷', label: 'Scan Receipt',   sub: 'Add multiple items from a receipt',  onPress: () => { setFabOpen(false); navigation.navigate('Scan'); } },
+              { icon: '📱', label: 'Barcode Scan',   sub: 'Scan a product barcode',             onPress: () => { setFabOpen(false); navigation.navigate('Scan'); } },
+              { icon: '✏️', label: 'Manual Add',     sub: 'Type in an ingredient by hand',      onPress: () => { setFabOpen(false); navigation.navigate(state.routes[0].name); } },
+              { icon: '✨', label: 'AI Add',         sub: 'Coming soon · Premium',              onPress: null, premium: true },
+            ].map((action, i) => (
+              <TouchableOpacity
+                key={i}
+                onPress={() => { if (action.onPress) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); action.onPress(); } }}
+                disabled={!action.onPress}
+                style={{
+                  flexDirection: 'row', alignItems: 'center',
+                  backgroundColor: COLORS.cardAlt ?? COLORS.bg,
+                  borderRadius: 16, padding: 16, marginBottom: 10,
+                  opacity: action.premium ? 0.5 : 1,
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={{ fontSize: 26, marginRight: 14 }}>{action.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 15, color: COLORS.text }}>{action.label}</Text>
+                  <Text style={{ fontFamily: FONTS.body, fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>{action.sub}</Text>
+                </View>
+                {!action.premium && (
+                  <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
+                )}
+                {action.premium && (
+                  <View style={{ backgroundColor: '#FFD700' + '33', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+                    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 11, color: '#B8860B' }}>SOON</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFabOpen(false); }}
+              style={{
+                backgroundColor: COLORS.cardAlt ?? COLORS.bg,
+                borderRadius: 16, padding: 16, alignItems: 'center', marginTop: 4,
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontFamily: FONTS.bodyMed, fontSize: 15, color: COLORS.textMuted }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
