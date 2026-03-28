@@ -526,14 +526,17 @@ export const INITIAL_HEALTH_DATA = {
       { id: 'm4', name: 'Cheese & Spinach Omelette', emoji: '🍳', time: '6:30 PM', calories: 230 },
     ],
   },
-  weekly: [
-    { day: 'Mon', calories: 1850 },
-    { day: 'Tue', calories: 2100 },
-    { day: 'Wed', calories: 1780 },
-    { day: 'Thu', calories: 1920 },
-    { day: 'Fri', calories: 2050 },
-    { day: 'Sat', calories: 1650 },
-    { day: 'Sun', calories: 1240 },
+  daily: [
+    { day: '27', calories: 1920 }, { day: '28', calories: 1650 }, { day: '1',  calories: 2100 },
+    { day: '2',  calories: 1780 }, { day: '3',  calories: 1850 }, { day: '4',  calories: 2200 },
+    { day: '5',  calories: 1600 }, { day: '6',  calories: 1750 }, { day: '7',  calories: 2300 },
+    { day: '8',  calories: 1900 }, { day: '9',  calories: 1820 }, { day: '10', calories: 2050 },
+    { day: '11', calories: 1700 }, { day: '12', calories: 1980 }, { day: '13', calories: 2150 },
+    { day: '14', calories: 1550 }, { day: '15', calories: 1870 }, { day: '16', calories: 2080 },
+    { day: '17', calories: 1760 }, { day: '18', calories: 1930 }, { day: '19', calories: 2220 },
+    { day: '20', calories: 1640 }, { day: '21', calories: 1810 }, { day: '22', calories: 2040 },
+    { day: '23', calories: 1720 }, { day: '24', calories: 1960 }, { day: '25', calories: 2180 },
+    { day: '26', calories: 1580 }, { day: '27', calories: 2050 }, { day: '28', calories: 1240 },
   ],
 };
 

@@ -257,9 +257,6 @@ function GlassTabBar({ state, descriptors, navigation }) {
   };
 
   React.useEffect(() => { snapToIndex(state.index); }, [state.index, tabWidth]);
-  React.useEffect(() => {
-    if (tabWidthRef.current) bubblePixelX.setValue(state.index * tabWidthRef.current);
-  }, [tabWidth]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -270,7 +267,7 @@ function GlassTabBar({ state, descriptors, navigation }) {
         const tw = tabWidthRef.current;
         if (!tw) return;
         // Snap bubble to the tab the finger is touching, then drag from there
-        const touchedIndex = Math.max(0, Math.min(Math.floor(g.x0 / tw), count - 1));
+        const touchedIndex = Math.max(0, Math.min(Math.floor((g.x0 - 6) / tw), count - 1));
         const snapX = touchedIndex * tw;
         bubblePixelX.setValue(snapX);
         bubbleStartXRef.current = snapX;
@@ -287,7 +284,7 @@ function GlassTabBar({ state, descriptors, navigation }) {
         if (!tw) return;
         if (Math.abs(g.dx) < 8) {
           // Tap — navigate to the tab that was touched
-          const tappedIndex = Math.max(0, Math.min(Math.floor(g.x0 / tw), count - 1));
+          const tappedIndex = Math.max(0, Math.min(Math.floor((g.x0 - 6) / tw), count - 1));
           navigation.navigate(state.routes[tappedIndex].name);
         } else {
           // Drag — snap to nearest from drag end position
@@ -308,8 +305,9 @@ function GlassTabBar({ state, descriptors, navigation }) {
           {...panResponder.panHandlers}
           style={styles.tabBarInner}
           onLayout={(e) => {
-            const w = e.nativeEvent.layout.width / count;
+            const w = (e.nativeEvent.layout.width - 12) / count;
             tabWidthRef.current = w;
+            bubblePixelX.setValue(currentIndexRef.current * w);
             setTabWidth(w);
             setInnerHeight(e.nativeEvent.layout.height);
           }}
@@ -323,7 +321,7 @@ function GlassTabBar({ state, descriptors, navigation }) {
                   width: BUBBLE_W,
                   height: BUBBLE_H,
                   top: bubbleTop,
-                  left: (tabWidth - BUBBLE_W) / 2,
+                  left: 6 + (tabWidth - BUBBLE_W) / 2,
                   borderRadius: BUBBLE_H / 2,
                   transform: [{ translateX: bubblePixelX }, { scaleX: bubbleScaleX }],
                 },
