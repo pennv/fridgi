@@ -9,9 +9,8 @@ import {
 } from 'react-native';
 import { FONTS, RADIUS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
-import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
+import { Animated, useFadeInUp, usePressScale } from '../components/useAnimations';
 import {
-  Card,
   hapticSelection,
   hapticMedium,
   hapticSuccess,
@@ -20,249 +19,104 @@ import {
 import { QUICK_MEAL_OPTIONS } from '../data';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner'];
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MEAL_EMOJI = { breakfast: '🌅', lunch: '☀️', dinner: '🌙' };
+const DOW_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
 
-function getWeekDates(offset = 0) {
-  const dates = [];
-  const today = new Date();
-  const start = new Date(today);
-  start.setDate(start.getDate() + offset * 7);
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    dates.push({
-      key: d.toISOString().split('T')[0],
-      dayName: DAY_NAMES[d.getDay()],
-      shortDay: SHORT_DAYS[d.getDay()],
-      date: d.getDate(),
-      month: d.toLocaleDateString('en', { month: 'short' }),
-      isToday: d.toDateString() === today.toDateString(),
-    });
+function getMonthCells(year, month) {
+  const todayKey = new Date().toISOString().split('T')[0];
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key = date.toISOString().split('T')[0];
+    cells.push({ day: d, key, isToday: key === todayKey });
   }
-  return dates;
+  return cells;
 }
 
 function MealSlot({ meal, type, onAdd, onRemove }) {
   const { colors: COLORS } = useTheme();
-  const styles = StyleSheet.create({
-    emptySlot: {
-      borderWidth: 1,
-      borderColor: COLORS.borderLight,
-      borderStyle: 'dashed',
-      borderRadius: RADIUS.md,
-      paddingVertical: 12,
-      alignItems: 'center',
-    },
-    emptySlotText: {
-      fontSize: 13,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.textDim,
-    },
-    filledSlot: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: COLORS.cardAlt,
-      borderRadius: RADIUS.md,
-      padding: 12,
-    },
-    mealName: {
-      fontSize: 14,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.text,
-    },
-    mealTime: {
-      fontSize: 11,
-      fontFamily: FONTS.body,
-      color: COLORS.textMuted,
-      marginTop: 2,
-    },
-    removeBtn: {
-      fontSize: 14,
-      color: COLORS.textDim,
-      padding: 4,
-    },
-  });
-
   const press = usePressScale(0.97);
 
   if (!meal) {
     return (
       <Animated.View style={press.style}>
         <TouchableOpacity
-          style={styles.emptySlot}
+          style={{
+            borderWidth: 1, borderColor: COLORS.border, borderStyle: 'dashed',
+            borderRadius: RADIUS.md, paddingVertical: 12, alignItems: 'center',
+          }}
           onPress={onAdd}
           onPressIn={press.onPressIn}
           onPressOut={press.onPressOut}
           activeOpacity={1}
         >
-          <Text style={styles.emptySlotText}>+ Add {type}</Text>
+          <Text style={{ fontSize: 13, fontFamily: FONTS.bodyMed, color: COLORS.textMuted }}>
+            + Add {type}
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     );
   }
 
   return (
-    <View style={styles.filledSlot}>
+    <View style={{
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: COLORS.cardAlt, borderRadius: RADIUS.md, padding: 12,
+    }}>
       <Text style={{ fontSize: 18, marginRight: 8 }}>{meal.emoji}</Text>
       <View style={{ flex: 1 }}>
-        <Text style={styles.mealName}>{meal.name}</Text>
-        <Text style={styles.mealTime}>{meal.time}</Text>
+        <Text style={{ fontSize: 14, fontFamily: FONTS.bodyMed, color: COLORS.text }}>{meal.name}</Text>
+        <Text style={{ fontSize: 11, fontFamily: FONTS.body, color: COLORS.textMuted, marginTop: 2 }}>{meal.time}</Text>
       </View>
-      <TouchableOpacity onPress={onRemove}>
-        <Text style={styles.removeBtn}>✕</Text>
+      <TouchableOpacity onPress={onRemove} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <Text style={{ fontSize: 14, color: COLORS.textMuted, padding: 4 }}>✕</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-export default function MealPlanScreen({ mealPlan, setMealPlan, addActivity }) {
+export default function MealPlanScreen({ navigation, mealPlan, setMealPlan, addActivity }) {
   const { colors: COLORS } = useTheme();
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.bg },
-    content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 12 },
-    title: {
-      fontSize: 32,
-      fontFamily: FONTS.display,
-      color: COLORS.text,
-    },
-    weekNav: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 20,
-    },
-    weekArrow: {
-      fontSize: 24,
-      fontFamily: FONTS.bodyBold,
-      color: COLORS.primary,
-      padding: 8,
-    },
-    weekLabel: {
-      fontSize: 16,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.text,
-      minWidth: 100,
-      textAlign: 'center',
-    },
-    statsStrip: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    statItem: {
-      flex: 1,
-      backgroundColor: COLORS.card,
-      borderRadius: RADIUS.xl,
-      padding: 16,
-      alignItems: 'center',
-    },
-    statValue: {
-      fontSize: 24,
-      fontFamily: FONTS.display,
-      color: COLORS.text,
-    },
-    statLabel: {
-      fontSize: 12,
-      fontFamily: FONTS.body,
-      color: COLORS.textMuted,
-      marginTop: 4,
-    },
-    dayCard: {
-      padding: 16,
-      gap: 8,
-    },
-    dayCardToday: {
-      borderWidth: 1,
-      borderColor: COLORS.primary + '44',
-    },
-    dayHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 4,
-    },
-    dayName: {
-      fontSize: 16,
-      fontFamily: FONTS.bodyBold,
-      color: COLORS.text,
-    },
-    dayDate: {
-      fontSize: 13,
-      fontFamily: FONTS.body,
-      color: COLORS.textMuted,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: COLORS.overlay,
-      justifyContent: 'flex-end',
-    },
-    modalContent: {
-      backgroundColor: COLORS.card,
-      borderTopLeftRadius: RADIUS.xxl,
-      borderTopRightRadius: RADIUS.xxl,
-      maxHeight: '60%',
-      paddingBottom: 40,
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 20,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: COLORS.border,
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontFamily: FONTS.bodyBold,
-      color: COLORS.text,
-      textTransform: 'capitalize',
-    },
-    modalClose: {
-      fontSize: 18,
-      color: COLORS.textMuted,
-      padding: 4,
-    },
-    mealOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: COLORS.border,
-    },
-    mealOptionName: {
-      fontSize: 15,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.text,
-    },
-    mealOptionTime: {
-      fontSize: 12,
-      fontFamily: FONTS.body,
-      color: COLORS.textMuted,
-      marginTop: 2,
-    },
-    chevron: {
-      fontSize: 20,
-      color: COLORS.primary,
-      fontWeight: '600',
-    },
-  });
 
-  const [weekOffset, setWeekOffset] = useState(0);
+  const today = new Date();
+  const todayKey = today.toISOString().split('T')[0];
+
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+  const [selectedKey, setSelectedKey] = useState(todayKey);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
 
   const headerAnim = useFadeInUp();
-  const weekDates = getWeekDates(weekOffset);
+  const cells = getMonthCells(year, month);
+  const selectedPlan = mealPlan[selectedKey] || {};
 
-  const mealsPlanned = weekDates.reduce((count, d) => {
-    const plan = mealPlan[d.key] || {};
-    return count + MEAL_TYPES.filter((t) => plan[t]).length;
-  }, 0);
-  const totalSlots = weekDates.length * 3;
+  const selectedDate = new Date(selectedKey + 'T12:00:00');
+  const selectedLabel = selectedKey === todayKey
+    ? 'Today'
+    : selectedDate.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
 
-  const openPicker = (dateKey, mealType) => {
+  const prevMonth = () => {
+    hapticSelection();
+    if (month === 0) { setMonth(11); setYear((y) => y - 1); }
+    else setMonth((m) => m - 1);
+  };
+  const nextMonth = () => {
+    hapticSelection();
+    if (month === 11) { setMonth(0); setYear((y) => y + 1); }
+    else setMonth((m) => m + 1);
+  };
+
+  const openPicker = (mealType) => {
     hapticMedium();
-    setSelectedSlot({ dateKey, mealType });
+    setSelectedSlot({ dateKey: selectedKey, mealType });
     setModalVisible(true);
   };
 
@@ -281,100 +135,168 @@ export default function MealPlanScreen({ mealPlan, setMealPlan, addActivity }) {
     setModalVisible(false);
   };
 
-  const removeMeal = (dateKey, mealType) => {
+  const removeMeal = (mealType) => {
     hapticDestructive();
     setMealPlan((prev) => ({
       ...prev,
-      [dateKey]: { ...(prev[dateKey] || {}), [mealType]: null },
+      [selectedKey]: { ...(prev[selectedKey] || {}), [mealType]: null },
     }));
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <Animated.View style={headerAnim}>
-          <Text style={styles.title}>Meal Plan</Text>
-        </Animated.View>
-
-        {/* Week Nav */}
-        <View style={styles.weekNav}>
-          <TouchableOpacity onPress={() => { hapticSelection(); setWeekOffset(weekOffset - 1); }}>
-            <Text style={styles.weekArrow}>‹</Text>
+    <View style={{ flex: 1, backgroundColor: COLORS.bg }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 24, paddingTop: 16, paddingBottom: 110, gap: 20 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Nav header */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 40 }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 8, padding: 4 }}>
+            <Text style={{ fontSize: 28, color: COLORS.primary, fontFamily: FONTS.bodyBold, lineHeight: 32 }}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.weekLabel}>
-            {weekOffset === 0 ? 'This Week' : weekOffset > 0 ? `+${weekOffset} Week` : `${weekOffset} Week`}
+          <Animated.View style={headerAnim}>
+            <Text style={{ fontSize: 32, fontFamily: FONTS.display, color: COLORS.text }}>Meal Plan</Text>
+          </Animated.View>
+        </View>
+
+        {/* Month navigator */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+          <TouchableOpacity onPress={prevMonth} style={{ padding: 8 }}>
+            <Text style={{ fontSize: 22, color: COLORS.primary, fontFamily: FONTS.bodyBold }}>‹</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 17, fontFamily: FONTS.bodyBold, color: COLORS.text, minWidth: 140, textAlign: 'center' }}>
+            {MONTH_NAMES[month]} {year}
           </Text>
-          <TouchableOpacity onPress={() => { hapticSelection(); setWeekOffset(weekOffset + 1); }}>
-            <Text style={styles.weekArrow}>›</Text>
+          <TouchableOpacity onPress={nextMonth} style={{ padding: 8 }}>
+            <Text style={{ fontSize: 22, color: COLORS.primary, fontFamily: FONTS.bodyBold }}>›</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Stats */}
-        <View style={styles.statsStrip}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{mealsPlanned}</Text>
-            <Text style={styles.statLabel}>Planned</Text>
+        {/* Calendar */}
+        <View style={{ backgroundColor: COLORS.card, borderRadius: RADIUS.xl, padding: 16 }}>
+          {/* Day-of-week headers */}
+          <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+            {DOW_LABELS.map((l, i) => (
+              <View key={i} style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: COLORS.textMuted }}>{l}</Text>
+              </View>
+            ))}
           </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{totalSlots - mealsPlanned}</Text>
-            <Text style={styles.statLabel}>Open</Text>
+
+          {/* Day cells */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {cells.map((cell, i) => {
+              if (!cell) {
+                return <View key={`e-${i}`} style={{ width: `${100 / 7}%`, height: 48 }} />;
+              }
+              const isSelected = selectedKey === cell.key;
+              const plan = mealPlan[cell.key] || {};
+              const plannedCount = MEAL_TYPES.filter((t) => plan[t]).length;
+
+              return (
+                <TouchableOpacity
+                  key={cell.key}
+                  style={{ width: `${100 / 7}%`, height: 52, alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                  onPress={() => { hapticSelection(); setSelectedKey(cell.key); }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{
+                    width: 32, height: 32, borderRadius: 16,
+                    backgroundColor: isSelected
+                      ? COLORS.primary
+                      : cell.isToday
+                        ? COLORS.primary + '22'
+                        : 'transparent',
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Text style={{
+                      fontSize: 14,
+                      fontFamily: isSelected || cell.isToday ? FONTS.bodyBold : FONTS.body,
+                      color: isSelected ? '#fff' : cell.isToday ? COLORS.primary : COLORS.text,
+                    }}>
+                      {cell.day}
+                    </Text>
+                  </View>
+                  {/* Meal dots */}
+                  <View style={{ flexDirection: 'row', gap: 2 }}>
+                    {MEAL_TYPES.map((type) => (
+                      <View key={type} style={{
+                        width: 4, height: 4, borderRadius: 2,
+                        backgroundColor: plan[type]
+                          ? (isSelected ? '#ffffff88' : COLORS.primary)
+                          : COLORS.border,
+                      }} />
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
-        {/* Day Cards */}
-        {weekDates.map((d, index) => {
-          const plan = mealPlan[d.key] || {};
-          const dayAnim = useStaggeredItem(index);
-          return (
-            <Animated.View key={d.key} style={dayAnim}>
-              <Card style={[styles.dayCard, d.isToday && styles.dayCardToday]}>
-                <View style={styles.dayHeader}>
-                  <Text style={styles.dayName}>
-                    {d.isToday ? 'Today' : d.dayName}
-                  </Text>
-                  <Text style={styles.dayDate}>{d.month} {d.date}</Text>
-                </View>
-                {MEAL_TYPES.map((type) => (
-                  <MealSlot
-                    key={type}
-                    meal={plan[type]}
-                    type={type}
-                    onAdd={() => openPicker(d.key, type)}
-                    onRemove={() => removeMeal(d.key, type)}
-                  />
-                ))}
-              </Card>
-            </Animated.View>
-          );
-        })}
+        {/* Selected day meal slots */}
+        <View style={{ gap: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 17, fontFamily: FONTS.bodyBold, color: COLORS.text }}>{selectedLabel}</Text>
+            <Text style={{ fontSize: 13, fontFamily: FONTS.body, color: COLORS.textMuted }}>
+              {MEAL_TYPES.filter((t) => selectedPlan[t]).length}/3 planned
+            </Text>
+          </View>
+
+          {MEAL_TYPES.map((type) => (
+            <View key={type} style={{ gap: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 13, opacity: 0.6 }}>{MEAL_EMOJI[type]}</Text>
+                <Text style={{ fontSize: 12, fontFamily: FONTS.bodyMed, color: COLORS.textMuted, textTransform: 'capitalize' }}>
+                  {type}
+                </Text>
+              </View>
+              <MealSlot
+                meal={selectedPlan[type]}
+                type={type}
+                onAdd={() => openPicker(type)}
+                onRemove={() => removeMeal(type)}
+              />
+            </View>
+          ))}
+        </View>
       </ScrollView>
 
-      {/* Meal Picker Modal */}
+      {/* Meal picker modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+        <View style={{ flex: 1, backgroundColor: COLORS.overlay, justifyContent: 'flex-end' }}>
+          <View style={{
+            backgroundColor: COLORS.card,
+            borderTopLeftRadius: RADIUS.xxl, borderTopRightRadius: RADIUS.xxl,
+            maxHeight: '60%', paddingBottom: 40,
+          }}>
+            <View style={{
+              flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+              padding: 20, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border,
+            }}>
+              <Text style={{ fontSize: 18, fontFamily: FONTS.bodyBold, color: COLORS.text, textTransform: 'capitalize' }}>
                 Choose {selectedSlot?.mealType}
               </Text>
               <TouchableOpacity onPress={() => { hapticSelection(); setModalVisible(false); }}>
-                <Text style={styles.modalClose}>✕</Text>
+                <Text style={{ fontSize: 18, color: COLORS.textMuted, padding: 4 }}>✕</Text>
               </TouchableOpacity>
             </View>
             <ScrollView>
               {QUICK_MEAL_OPTIONS.map((option, i) => (
                 <TouchableOpacity
                   key={i}
-                  style={styles.mealOption}
+                  style={{
+                    flexDirection: 'row', alignItems: 'center', padding: 16,
+                    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border,
+                  }}
                   onPress={() => assignMeal(option)}
                 >
                   <Text style={{ fontSize: 24, marginRight: 12 }}>{option.emoji}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.mealOptionName}>{option.name}</Text>
-                    <Text style={styles.mealOptionTime}>{option.time}</Text>
+                    <Text style={{ fontSize: 15, fontFamily: FONTS.bodyMed, color: COLORS.text }}>{option.name}</Text>
+                    <Text style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted, marginTop: 2 }}>{option.time}</Text>
                   </View>
-                  <Text style={styles.chevron}>›</Text>
+                  <Text style={{ fontSize: 20, color: COLORS.primary, fontWeight: '600' }}>›</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>

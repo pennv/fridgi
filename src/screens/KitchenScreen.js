@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { FONTS, RADIUS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
+import { useFABScroll } from '../context/FABContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   ExpiryBadge,
@@ -25,6 +26,7 @@ import { LOCATIONS } from '../data';
 
 export default function KitchenScreen({ fridgeItems, setFridgeItems, shoppingList, setShoppingList, addActivity }) {
   const { colors: COLORS } = useTheme();
+  const onFABScroll = useFABScroll();
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
     content: { padding: 24, paddingTop: 60, paddingBottom: 110 },
@@ -264,7 +266,7 @@ export default function KitchenScreen({ fridgeItems, setFridgeItems, shoppingLis
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={onFABScroll} scrollEventThrottle={16}>
       {/* Header */}
       <Animated.View style={[styles.headerRow, headerAnim]}>
         <Text style={styles.title}>Kitchen</Text>

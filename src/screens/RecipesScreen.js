@@ -1,67 +1,27 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
+  useWindowDimensions,
 } from 'react-native';
 import { FONTS, RADIUS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
+import { useFABScroll } from '../context/FABContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   IngredientMatchBar,
   GroupedCard,
   hapticSelection,
   hapticMedium,
-  hapticSuccess,
 } from '../components/shared';
-import { MOCK_RECIPES } from '../data';
-import { ANTHROPIC_API_KEY, ANTHROPIC_URL, MODEL } from '../config';
+
+// ─── Recipe row ───────────────────────────────────────────────────────────────
 
 function RecipeRow({ recipe, onPress, index }) {
   const { colors: COLORS } = useTheme();
-  const styles = StyleSheet.create({
-    recipeRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 14,
-      gap: 12,
-    },
-    recipeEmojiWrap: {
-      width: 48,
-      height: 48,
-      borderRadius: RADIUS.md,
-      backgroundColor: COLORS.cardAlt,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    recipeName: {
-      fontSize: 15,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.text,
-    },
-    urgentDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 4,
-      backgroundColor: COLORS.danger,
-    },
-    recipeMeta: {
-      fontSize: 12,
-      fontFamily: FONTS.body,
-      color: COLORS.textMuted,
-      marginTop: 2,
-      marginBottom: 6,
-    },
-    chevron: {
-      fontSize: 20,
-      color: COLORS.primary,
-      fontWeight: '600',
-    },
-  });
-
   const press = usePressScale(0.98);
   const anim = useStaggeredItem(index);
   const have = recipe.ingredients.filter((i) => i.fromFridge).length;
@@ -70,246 +30,234 @@ function RecipeRow({ recipe, onPress, index }) {
   return (
     <Animated.View style={[press.style, anim]}>
       <TouchableOpacity
-        style={styles.recipeRow}
+        style={{ flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 }}
         onPress={onPress}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
         activeOpacity={1}
       >
-        <View style={styles.recipeEmojiWrap}>
+        <View style={{
+          width: 48, height: 48, borderRadius: RADIUS.md,
+          backgroundColor: COLORS.cardAlt,
+          justifyContent: 'center', alignItems: 'center',
+        }}>
           <Text style={{ fontSize: 28 }}>{recipe.emoji}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={styles.recipeName}>{recipe.name}</Text>
-            {recipe.usesExpiring && <View style={styles.urgentDot} />}
+            <Text style={{ fontSize: 15, fontFamily: FONTS.bodyMed, color: COLORS.text }}>{recipe.name}</Text>
+            {recipe.usesExpiring && (
+              <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: COLORS.danger }} />
+            )}
           </View>
-          <Text style={styles.recipeMeta}>
+          <Text style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted, marginTop: 2, marginBottom: 6 }}>
             {recipe.time} · {recipe.difficulty} · {recipe.cuisineType}
           </Text>
           <IngredientMatchBar have={have} total={total} />
         </View>
-        <Text style={styles.chevron}>›</Text>
+        <Text style={{ fontSize: 20, color: COLORS.primary, fontWeight: '600' }}>›</Text>
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
-export default function RecipesScreen({ navigation, fridgeItems, savedRecipes, setSavedRecipes, addActivity }) {
-  const { colors: COLORS } = useTheme();
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.bg },
-    content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 16 },
-    title: {
-      fontSize: 32,
-      fontFamily: FONTS.display,
-      color: COLORS.text,
-    },
-    tabBar: {
-      flexDirection: 'row',
-      backgroundColor: COLORS.card,
-      borderRadius: RADIUS.xl,
-      padding: 4,
-    },
-    tab: {
-      flex: 1,
-      paddingVertical: 10,
-      borderRadius: RADIUS.lg,
-      alignItems: 'center',
-    },
-    tabActive: {
-      backgroundColor: COLORS.primary,
-    },
-    tabText: {
-      fontSize: 14,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.textMuted,
-    },
-    tabTextActive: {
-      color: '#fff',
-    },
-    toast: {
-      backgroundColor: COLORS.successLight,
-      borderRadius: RADIUS.xl,
-      padding: 14,
-      alignItems: 'center',
-    },
-    toastText: {
-      fontSize: 14,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.success,
-    },
-    generateRow: {
-      backgroundColor: COLORS.card,
-      borderRadius: RADIUS.xl,
-      padding: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    generateTitle: {
-      fontSize: 15,
-      fontFamily: FONTS.bodyMed,
-      color: COLORS.text,
-    },
-    generateSub: {
-      fontSize: 12,
-      fontFamily: FONTS.body,
-      color: COLORS.textMuted,
-      marginTop: 2,
-    },
-    chevron: {
-      fontSize: 20,
-      color: COLORS.primary,
-      fontWeight: '600',
-    },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: COLORS.border,
-      marginLeft: 74,
-    },
-    emptyState: {
-      alignItems: 'center',
-      paddingTop: 60,
-    },
-    emptyText: {
-      fontSize: 16,
-      fontFamily: FONTS.body,
-      color: COLORS.textMuted,
-    },
+// ─── This Week card (7-day swipeable pager) ───────────────────────────────────
+
+const MEAL_TYPES = ['breakfast', 'lunch', 'dinner'];
+const MEAL_EMOJI = { breakfast: '🌅', lunch: '☀️', dinner: '🌙' };
+
+function getWeekDays() {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      key: d.toISOString().split('T')[0],
+      label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en', { weekday: 'short' }),
+      date: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+    };
   });
+}
 
-  const [tab, setTab] = useState('forYou');
-  const [recipes, setRecipes] = useState(MOCK_RECIPES);
-  const [generating, setGenerating] = useState(false);
-  const [toast, setToast] = useState(null);
+function ThisWeekCard({ mealPlan, navigation, cardWidth }) {
+  const { colors: COLORS } = useTheme();
+  const [currentPage, setCurrentPage] = useState(0);
+  const scrollRef = useRef(null);
+  const weekDays = getWeekDays();
 
-  const headerAnim = useFadeInUp();
-
-  const showToast = useCallback((text, type = 'success') => {
-    setToast({ text, type });
-    setTimeout(() => setToast(null), 3000);
-  }, []);
-
-  const generateRecipes = async () => {
-    hapticMedium();
-    setGenerating(true);
-
-    if (ANTHROPIC_API_KEY === 'YOUR_API_KEY_HERE') {
-      // Demo mode
-      await new Promise((r) => setTimeout(r, 1700));
-      hapticSuccess();
-      setRecipes(MOCK_RECIPES);
-      showToast('Generated 3 recipes from your kitchen! ✨');
-      addActivity('Generated 3 recipes from kitchen', '✨');
-    } else {
-      try {
-        const inv = fridgeItems.map((i) => `${i.name}(${i.qty} ${i.unit}, ${i.expiryDays}d)`).join(', ');
-        const resp = await fetch(ANTHROPIC_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            max_tokens: 4000,
-            messages: [{
-              role: 'user',
-              content: `Given these kitchen items: ${inv}\n\nGenerate a JSON array of 3 recipes. Each recipe: {id, name, emoji, time, difficulty, servings, description, usesExpiring (bool if uses items expiring in <3 days), cuisineType, ingredients: [{name, qty, fromFridge (bool)}], steps: [{instruction, timerSeconds (number or null)}], nutrition: {calories, protein, carbs, fat}}. Return ONLY the JSON array.`,
-            }],
-          }),
-        });
-        const data = await resp.json();
-        const text = data.content[0].text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        const parsed = JSON.parse(text);
-        setRecipes(parsed);
-        hapticSuccess();
-        showToast(`Generated ${parsed.length} recipes! ✨`);
-        addActivity(`Generated ${parsed.length} recipes from kitchen`, '✨');
-      } catch (e) {
-        showToast('Failed to generate recipes', 'error');
-      }
-    }
-    setGenerating(false);
+  const goToPage = (i) => {
+    hapticSelection();
+    scrollRef.current?.scrollTo({ x: i * cardWidth, animated: true });
   };
 
-  const displayRecipes = tab === 'saved' ? savedRecipes : recipes;
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <Animated.View style={headerAnim}>
-        <Text style={styles.title}>Recipes</Text>
-      </Animated.View>
+    <View style={{ backgroundColor: COLORS.card, borderRadius: RADIUS.xl, overflow: 'hidden' }}>
 
-      {/* Tabs */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, tab === 'forYou' && styles.tabActive]}
-          onPress={() => { hapticSelection(); setTab('forYou'); }}
-        >
-          <Text style={[styles.tabText, tab === 'forYou' && styles.tabTextActive]}>For You</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, tab === 'saved' && styles.tabActive]}
-          onPress={() => { hapticSelection(); setTab('saved'); }}
-        >
-          <Text style={[styles.tabText, tab === 'saved' && styles.tabTextActive]}>
-            Saved ({savedRecipes.length})
-          </Text>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 }}>
+        <Text style={{ fontSize: 18, marginRight: 10 }}>📅</Text>
+        <Text style={{ flex: 1, fontSize: 15, fontFamily: FONTS.bodyBold, color: COLORS.text }}>This Week</Text>
+        <TouchableOpacity onPress={() => { hapticMedium(); navigation.navigate('MealPlan'); }} activeOpacity={0.75}>
+          <Text style={{ fontSize: 13, fontFamily: FONTS.bodyMed, color: COLORS.primary }}>Edit ›</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Toast */}
-      {toast && (
-        <View style={[styles.toast, toast.type === 'error' && { backgroundColor: COLORS.dangerLight }]}>
-          <Text style={[styles.toastText, toast.type === 'error' && { color: COLORS.danger }]}>
-            {toast.text}
-          </Text>
-        </View>
-      )}
-
-      {/* Generate Button */}
-      {tab === 'forYou' && (
-        <TouchableOpacity style={styles.generateRow} onPress={generateRecipes} disabled={generating}>
-          <Text style={{ fontSize: 24, marginRight: 12 }}>✨</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.generateTitle}>Generate from my kitchen</Text>
-            <Text style={styles.generateSub}>AI-powered recipes from what you have</Text>
-          </View>
-          {generating ? (
-            <ActivityIndicator color={COLORS.primary} />
-          ) : (
-            <Text style={styles.chevron}>›</Text>
-          )}
-        </TouchableOpacity>
-      )}
-
-      {/* Recipe List */}
-      <GroupedCard>
-        {displayRecipes.map((recipe, i) => (
-          <React.Fragment key={recipe.id}>
-            <RecipeRow
-              recipe={recipe}
-              index={i}
-              onPress={() => {
-                hapticMedium();
-                navigation.navigate('RecipeDetail', { recipe });
-              }}
-            />
-            {i < displayRecipes.length - 1 && <View style={styles.divider} />}
-          </React.Fragment>
+      {/* Day pills */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 10, gap: 6 }}
+      >
+        {weekDays.map((day, i) => (
+          <TouchableOpacity
+            key={day.key}
+            onPress={() => goToPage(i)}
+            style={{
+              paddingHorizontal: 12, paddingVertical: 6,
+              borderRadius: RADIUS.full,
+              backgroundColor: currentPage === i ? COLORS.primary : COLORS.cardAlt ?? COLORS.bg,
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={{
+              fontSize: 12, fontFamily: FONTS.bodyMed,
+              color: currentPage === i ? '#fff' : COLORS.textMuted,
+            }}>{day.label}</Text>
+          </TouchableOpacity>
         ))}
-      </GroupedCard>
+      </ScrollView>
 
-      {displayRecipes.length === 0 && (
-        <View style={styles.emptyState}>
-          <Text style={{ fontSize: 48, marginBottom: 12 }}>
-            {tab === 'saved' ? '🔖' : '👨‍🍳'}
-          </Text>
-          <Text style={styles.emptyText}>
-            {tab === 'saved' ? 'No saved recipes yet' : 'Generate recipes from your kitchen!'}
+      {/* 7-day pager */}
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          const page = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
+          if (page !== currentPage) setCurrentPage(page);
+        }}
+        style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.border }}
+      >
+        {weekDays.map((day) => {
+          const dayPlan = mealPlan?.[day.key] || {};
+          const plannedCount = MEAL_TYPES.filter((t) => dayPlan[t]).length;
+
+          return (
+            <View key={day.key} style={{ width: cardWidth }}>
+              {/* Meal slots */}
+              {MEAL_TYPES.map((type, i) => {
+                const meal = dayPlan[type];
+                return (
+                  <View
+                    key={type}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center',
+                      paddingHorizontal: 16, paddingVertical: 12,
+                      borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth,
+                      borderTopColor: COLORS.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 14, marginRight: 10, opacity: 0.65 }}>{MEAL_EMOJI[type]}</Text>
+                    <Text style={{
+                      fontSize: 13, fontFamily: FONTS.bodyMed,
+                      color: COLORS.textMuted, width: 70, textTransform: 'capitalize',
+                    }}>{type}</Text>
+                    {meal ? (
+                      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ fontSize: 15 }}>{meal.emoji}</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONTS.bodyMed, color: COLORS.text }} numberOfLines={1}>
+                          {meal.name}
+                        </Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity onPress={() => { hapticSelection(); navigation.navigate('MealPlan'); }} activeOpacity={0.6}>
+                        <Text style={{ fontSize: 13, fontFamily: FONTS.body, color: COLORS.textDim ?? COLORS.textMuted }}>
+                          + Add {type}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
+
+              {/* Day footer */}
+              <View style={{
+                flexDirection: 'row', alignItems: 'center',
+                paddingHorizontal: 16, paddingVertical: 10,
+                borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.border,
+              }}>
+                <View style={{ flex: 1, flexDirection: 'row', gap: 5 }}>
+                  {MEAL_TYPES.map((type) => (
+                    <View key={type} style={{
+                      flex: 1, height: 3, borderRadius: 2,
+                      backgroundColor: dayPlan[type] ? COLORS.primary : COLORS.cardAlt ?? COLORS.border,
+                    }} />
+                  ))}
+                </View>
+                <Text style={{ fontSize: 12, fontFamily: FONTS.body, color: COLORS.textMuted, marginLeft: 12 }}>
+                  {plannedCount}/3 planned
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
+
+export default function RecipesScreen({
+  navigation, fridgeItems, savedRecipes, setSavedRecipes,
+  mealPlan, setMealPlan, addActivity,
+}) {
+  const { colors: COLORS } = useTheme();
+  const { width } = useWindowDimensions();
+  const cardWidth = width - 48; // 24px padding each side
+
+  const headerAnim = useFadeInUp();
+  const onFABScroll = useFABScroll();
+
+  return (
+    <ScrollView
+      style={{ flex: 1, backgroundColor: COLORS.bg }}
+      contentContainerStyle={{ padding: 24, paddingTop: 60, paddingBottom: 110, gap: 16 }}
+      showsVerticalScrollIndicator={false}
+      onScroll={onFABScroll}
+      scrollEventThrottle={16}
+    >
+      {/* Header */}
+      <Animated.View style={headerAnim}>
+        <Text style={{ fontSize: 32, fontFamily: FONTS.display, color: COLORS.text }}>Recipes</Text>
+      </Animated.View>
+
+      {/* This Week card */}
+      <ThisWeekCard mealPlan={mealPlan} navigation={navigation} cardWidth={cardWidth} />
+
+      {/* Recipe list */}
+      {savedRecipes.length > 0 ? (
+        <GroupedCard>
+          {savedRecipes.map((recipe, i) => (
+            <React.Fragment key={recipe.id ?? i}>
+              <RecipeRow
+                recipe={recipe}
+                index={i}
+                onPress={() => { hapticMedium(); navigation.navigate('RecipeDetail', { recipe }); }}
+              />
+              {i < savedRecipes.length - 1 && (
+                <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: COLORS.border, marginLeft: 74 }} />
+              )}
+            </React.Fragment>
+          ))}
+        </GroupedCard>
+      ) : (
+        <View style={{ alignItems: 'center', paddingTop: 48 }}>
+          <Text style={{ fontSize: 48, marginBottom: 12 }}>👨‍🍳</Text>
+          <Text style={{ fontSize: 16, fontFamily: FONTS.bodyMed, color: COLORS.text, marginBottom: 6 }}>No recipes yet</Text>
+          <Text style={{ fontSize: 14, fontFamily: FONTS.body, color: COLORS.textMuted, textAlign: 'center' }}>
+            Save recipes from your kitchen to build your collection
           </Text>
         </View>
       )}

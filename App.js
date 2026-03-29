@@ -12,11 +12,13 @@ import {
 
 import { DARK_COLORS } from './src/theme';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { FABProvider } from './src/context/FABContext';
 import {
   INITIAL_FRIDGE_ITEMS,
   INITIAL_SHOPPING_LIST,
   INITIAL_MEAL_PLAN,
   INITIAL_ACTIVITY,
+  INITIAL_SAVED_RECIPES,
 } from './src/data';
 
 import AppNavigator from './src/navigation/AppNavigator';
@@ -27,7 +29,7 @@ function AppInner() {
   const [fridgeItems, setFridgeItems] = useState(INITIAL_FRIDGE_ITEMS);
   const [shoppingList, setShoppingList] = useState(INITIAL_SHOPPING_LIST);
   const [mealPlan, setMealPlan] = useState(INITIAL_MEAL_PLAN);
-  const [savedRecipes, setSavedRecipes] = useState([]);
+  const [savedRecipes, setSavedRecipes] = useState(INITIAL_SAVED_RECIPES);
   const [activityFeed, setActivityFeed] = useState(INITIAL_ACTIVITY);
   const [userProfile, setUserProfile] = useState({
     name: '',
@@ -84,7 +86,9 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <AppInner />
+      <FABProvider>
+        <AppInner />
+      </FABProvider>
     </ThemeProvider>
   );
 }

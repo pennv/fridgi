@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { FONTS, RADIUS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
+import { useFABScroll } from '../context/FABContext';
 import { Animated, useFadeInUp, usePressScale, useStaggeredItem } from '../components/useAnimations';
 import {
   PrimaryButton,
@@ -22,6 +23,7 @@ import {
 
 export default function ShoppingScreen({ shoppingList, setShoppingList, fridgeItems, addActivity }) {
   const { colors: COLORS } = useTheme();
+  const onFABScroll = useFABScroll();
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.bg },
     content: { padding: 24, paddingTop: 60, paddingBottom: 110, gap: 16 },
@@ -261,7 +263,7 @@ export default function ShoppingScreen({ shoppingList, setShoppingList, fridgeIt
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={onFABScroll} scrollEventThrottle={16}>
       {/* Header */}
       <Animated.View style={[styles.headerRow, headerAnim]}>
         <View>
